@@ -220,7 +220,7 @@ Configure these in Garmin Connect / Connect IQ:
 - Lead minutes before event, default `60`
 - Extra buffer minutes, default `0`
 - Morning window start/end, default `04:00` through `12:00`
-- Snooze minutes, default `10`
+- Snooze minutes, default `10`, configurable from `6` to `60`
 - Alert mode: vibrate, tone and vibrate, or notification only
 - Tone style: alarm, loud beep, alert high, alert low, time alert, canary, or custom pattern
 - Custom tone pattern, using `frequency:duration,frequency:duration`

@@ -39,8 +39,8 @@
         <setting propertyKey="@Properties.morningEnd" title="@Strings.SettingMorningEndTitle">
             <settingConfig type="alphaNumeric" required="true" />
         </setting>
-        <setting propertyKey="@Properties.snoozeMinutes" title="@Strings.SettingSnoozeMinutesTitle">
-            <settingConfig type="numeric" min="5" max="60" required="true" />
+        <setting propertyKey="@Properties.snoozeMinutes" title="@Strings.SettingSnoozeMinutesTitle" prompt="@Strings.SettingSnoozeMinutesPrompt">
+            <settingConfig type="numeric" min="6" max="60" required="true" errorMessage="@Strings.SettingSnoozeMinutesError" />
         </setting>
         <setting propertyKey="@Properties.alertMode" title="@Strings.SettingAlertModeTitle">
             <settingConfig type="list" required="true">

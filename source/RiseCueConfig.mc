@@ -54,6 +54,9 @@ module RiseCueConfig {
     const TEMPORAL_PURPOSE_ALERT = "alert";
     const TEMPORAL_PURPOSE_WORKFLOW = "workflow";
 
+    const MIN_SNOOZE_MINUTES = 6;
+    const MAX_SNOOZE_MINUTES = 60;
+
     function getBoolean(key, defaultValue) {
         try {
             var value = Properties.getValue(key);
@@ -185,7 +188,14 @@ module RiseCueConfig {
     }
 
     function getSnoozeMinutes() {
-        return getNumber(PROP_SNOOZE_MINUTES, 10);
+        var minutes = getNumber(PROP_SNOOZE_MINUTES, 10);
+        if (minutes < MIN_SNOOZE_MINUTES) {
+            return MIN_SNOOZE_MINUTES;
+        } else if (minutes > MAX_SNOOZE_MINUTES) {
+            return MAX_SNOOZE_MINUTES;
+        }
+
+        return minutes;
     }
 
     function getAlertMode() {

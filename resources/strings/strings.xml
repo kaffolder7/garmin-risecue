@@ -15,6 +15,8 @@
         <string id="SettingMorningStartTitle">Morning window start</string>
         <string id="SettingMorningEndTitle">Morning window end</string>
         <string id="SettingSnoozeMinutesTitle">Snooze minutes</string>
+        <string id="SettingSnoozeMinutesPrompt">Minutes to wait before showing the wake alert again. Minimum 6 due to Garmin background scheduling.</string>
+        <string id="SettingSnoozeMinutesError">Snooze must be 6-60 minutes.</string>
         <string id="SettingAlertModeTitle">Alert mode</string>
         <string id="SettingToneStyleTitle">Tone style</string>
         <string id="SettingCustomTonePatternTitle">Custom tone pattern</string>
