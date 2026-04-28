@@ -109,7 +109,7 @@ Install the Garmin Connect IQ SDK. The helper scripts default to the SDK under y
   | tail -n 1)/bin"
 ```
 
-Build all supported watch sizes:
+Build all manifest-supported watches:
 
 ```sh
 npm run build:watch
@@ -180,7 +180,7 @@ bin/RiseCue-epix2pro47mm.prg
 
 Garmin's own guide describes real-device sideloading by placing the compiled program in `GARMIN/APPS`. App settings are often easier to test through the Connect IQ Store preview flow than raw sideloading.
 
-Supported manifest targets are `epix2pro42mm`, `epix2pro47mm`, and `epix2pro51mm`.
+Supported manifest targets are focused on Garmin watch-class devices that support this app's Connect IQ `minApiLevel` of `5.1.0` or newer. That currently includes recent Forerunner models (`165`, `255`, `265`, `570`, `955`, `965`, `970`), fenix 7/8/E variants, epix Gen 2/Pro variants, Enduro 3, Instinct 3/E/Crossover AMOLED, Venu 3/4/X1, vivoactive 5/6, MARQ Gen 2, Approach S50/S70, D2 Mach, and Descent G2/Mk3 devices.
 
 ## Connect IQ Store
 

@@ -31,7 +31,10 @@ export PATH="$JAVA_HOME/bin:$PATH"
 if [[ "$#" -gt 0 ]]; then
   DEVICES=("$@")
 else
-  DEVICES=(epix2pro42mm epix2pro47mm epix2pro51mm)
+  DEVICES=()
+  while IFS= read -r DEVICE; do
+    DEVICES+=("$DEVICE")
+  done < <(sed -n 's/.*<iq:product id="\([^"]*\)".*/\1/p' "$ROOT_DIR/manifest.xml")
 fi
 
 for DEVICE in "${DEVICES[@]}"; do
