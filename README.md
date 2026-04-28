@@ -57,6 +57,40 @@ Endpoint response without an event:
 { "hasEvent": false }
 ```
 
+### Endpoint on Coolify
+
+Push this repo to GitHub, Gitea, or another Git host Coolify can read. In Coolify:
+
+1. Create a new Application resource.
+2. Select the repo.
+3. Choose the Dockerfile build pack.
+4. Set the base directory to `/`.
+5. Expose port `8787`.
+6. Add runtime environment variables:
+
+```env
+CALENDAR_ICS_URL=https://calendar.google.com/calendar/ical/your-private-calendar/basic.ics
+CALENDAR_TIME_ZONE=America/Indiana/Indianapolis
+ENDPOINT_TOKEN=use-a-long-random-secret
+PORT=8787
+HOST=0.0.0.0
+```
+
+After deployment, test the endpoint:
+
+```sh
+curl https://calendar-wake.yourdomain.com/health
+curl -H "X-Calendar-Wake-Token: use-a-long-random-secret" \
+  "https://calendar-wake.yourdomain.com/next-morning-event?timeZone=America/Indiana/Indianapolis&windowStart=04:00&windowEnd=12:00"
+```
+
+Use these Garmin app setting values:
+
+```text
+Calendar endpoint URL: https://calendar-wake.yourdomain.com/next-morning-event
+Calendar endpoint token: use-a-long-random-secret
+```
+
 ## Watch Build
 
 Install the Garmin Connect IQ SDK. The helper scripts default to the SDK under your home directory:
@@ -79,6 +113,15 @@ npm run build:watch -- epix2pro47mm
 
 The script uses Homebrew OpenJDK 21 at `/opt/homebrew/opt/openjdk@21` and creates an ignored local `developer_key.der` if one is not already present. Override with `CONNECTIQ_SDK_BIN`, `JAVA_HOME`, or `CONNECTIQ_DEVELOPER_KEY` as needed.
 
+The developer key is not requested from Garmin. It is a local signing key used by `monkeyc -y`. For long-term use, keep it somewhere backed up and private, then point builds at it:
+
+```sh
+CONNECTIQ_DEVELOPER_KEY=/secure/path/developer_key.der npm run build:watch
+CONNECTIQ_DEVELOPER_KEY=/secure/path/developer_key.der npm run package:watch
+```
+
+A Garmin developer/store account is only needed when uploading to the Connect IQ Store.
+
 Build for an epix Pro Gen 2 47mm:
 
 ```sh
@@ -91,13 +134,61 @@ PATH="$JAVA_HOME/bin:$PATH" "$CONNECTIQ_SDK_BIN/monkeyc" \
   -y developer_key.der
 ```
 
-Run in the simulator:
+## Watch Testing
+
+First, build the app:
 
 ```sh
-monkeydo bin/CalendarWake.prg epix2pro47mm
+npm run build:watch
 ```
 
+For simulator testing, start Garmin's simulator, then run the matching `.prg` for the device:
+
+```sh
+"$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" \
+  bin/CalendarWake-epix2pro47mm.prg \
+  epix2pro47mm
+```
+
+For physical sideload testing, connect the watch over USB and copy the matching `.prg` into:
+
+```text
+/GARMIN/APPS/
+```
+
+For an epix Pro Gen 2 47mm, use:
+
+```text
+bin/CalendarWake-epix2pro47mm.prg
+```
+
+Garmin's own guide describes real-device sideloading by placing the compiled program in `GARMIN/APPS`. App settings are often easier to test through the Connect IQ Store preview flow than raw sideloading.
+
 Supported manifest targets are `epix2pro42mm`, `epix2pro47mm`, and `epix2pro51mm`.
+
+## Connect IQ Store
+
+Package the app:
+
+```sh
+npm run package:watch
+```
+
+The package is written to:
+
+```text
+bin/CalendarWake.iq
+```
+
+Before upload, make sure `manifest.xml` includes every product you want to support. Garmin's submission flow is to generate an `.iq` package containing all binaries, upload it to the Connect IQ Store, and wait for Garmin validation/review. While approval is pending, Garmin lets you preview and download the app yourself for testing.
+
+For the listing, be explicit:
+
+- RiseCue creates a wake notification/alert, not a native Garmin Alarm.
+- It requires the Background, Communications, and Notifications permissions.
+- It requires a hosted calendar endpoint.
+- Calendar data is processed by your self-hosted endpoint.
+- Include a privacy policy URL, especially because event titles and times may pass through your server.
 
 ## App Settings
 
