@@ -6,8 +6,13 @@ using Toybox.System;
 
 (:background)
 class CalendarWakeServiceDelegate extends System.ServiceDelegate {
+    var _sunriseTarget;
+    var _sunriseStatus;
+
     function initialize() {
         ServiceDelegate.initialize();
+        _sunriseTarget = null;
+        _sunriseStatus = null;
     }
 
     function onSleepTime() {
@@ -19,11 +24,13 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
             return;
         }
 
+        var sunriseResult = CalendarWakeScheduler.createSunriseTargetResult();
+        _sunriseTarget = CalendarWakeScheduler.getSunriseResultTarget(sunriseResult);
+        _sunriseStatus = CalendarWakeScheduler.getSunriseResultStatus(sunriseResult);
+
         var endpoint = CalendarWakeConfig.getEndpointUrl();
         if (endpoint == null || endpoint.equals("")) {
-            CalendarWakeScheduler.storeStatus("Calendar endpoint is not configured");
-            CalendarWakeScheduler.showStatusNotification("Calendar Wake", "Calendar endpoint is not configured.");
-            Background.exit({ "status" => "missing_endpoint" });
+            finishWithTarget(null, "Calendar endpoint is not configured", "missing_endpoint", true);
             return;
         }
 
@@ -51,9 +58,7 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
             CalendarWakeScheduler.storeStatus("Checking calendar");
             Communications.makeWebRequest(endpoint, params, options, method(:onCalendarResponse));
         } catch (ex) {
-            CalendarWakeScheduler.storeStatus("Calendar request failed");
-            CalendarWakeScheduler.showStatusNotification("Calendar Wake", "Could not start calendar request.");
-            Background.exit({ "status" => "request_start_failed" });
+            finishWithTarget(null, "Calendar request failed", "request_start_failed", true);
         }
     }
 
@@ -64,24 +69,19 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
 
     function onCalendarResponse(responseCode as Lang.Number, data as Lang.Dictionary or Lang.String or PersistedContent.Iterator or Null) as Void {
         if (responseCode != 200 || data == null) {
-            CalendarWakeScheduler.storeStatus("Calendar request returned " + responseCode);
-            CalendarWakeScheduler.showStatusNotification("Calendar Wake", "Calendar check failed.");
-            Background.exit({ "status" => "request_failed", "responseCode" => responseCode });
+            finishWithTarget(null, "Calendar request returned " + responseCode, "request_failed", true);
             return;
         }
 
         var response = data as Lang.Dictionary;
         if (response.get("hasEvent") != true) {
-            CalendarWakeScheduler.storeStatus("No morning events found");
-            Background.exit({ "status" => "no_event" });
+            finishWithTarget(null, "No morning events found", "no_event", false);
             return;
         }
 
         var eventStartEpoch = response.get("eventStartEpochSec");
         if (eventStartEpoch == null) {
-            CalendarWakeScheduler.storeStatus("Calendar response missing event time");
-            CalendarWakeScheduler.showStatusNotification("Calendar Wake", "Calendar response missing event time.");
-            Background.exit({ "status" => "invalid_response" });
+            finishWithTarget(null, "Calendar response missing event time", "invalid_response", true);
             return;
         }
 
@@ -101,7 +101,23 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
             eventStartLocal = responseStartLocal.toString();
         }
 
-        var scheduled = CalendarWakeScheduler.scheduleAlert(eventTitle, eventStartEpoch, eventStartLocal);
+        var calendarTarget = CalendarWakeScheduler.makeWakeTarget(eventTitle, eventStartEpoch, eventStartLocal);
+        finishWithTarget(calendarTarget, "No wake target found", "no_target", false);
+    }
+
+    function finishWithTarget(calendarTarget, noTargetStatus, noTargetExitStatus, notifyWhenNoTarget) {
+        var target = CalendarWakeScheduler.chooseEarlierWakeTarget(calendarTarget, _sunriseTarget);
+        if (target == null) {
+            var status = mergeSunriseStatus(noTargetStatus);
+            CalendarWakeScheduler.storeStatus(status);
+            if (notifyWhenNoTarget) {
+                CalendarWakeScheduler.showStatusNotification("Calendar Wake", status + ".");
+            }
+            Background.exit({ "status" => noTargetExitStatus });
+            return;
+        }
+
+        var scheduled = CalendarWakeScheduler.scheduleWakeTarget(target);
         if (!scheduled) {
             CalendarWakeScheduler.showStatusNotification("Calendar Wake", "Could not schedule wake alert.");
             Background.exit({ "status" => "schedule_failed" });
@@ -109,5 +125,18 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
         }
 
         Background.exit({ "status" => "scheduled" });
+    }
+
+    function mergeSunriseStatus(status) {
+        if (_sunriseStatus == null) {
+            return status;
+        }
+
+        var sunriseStatus = _sunriseStatus.toString();
+        if (sunriseStatus.equals("")) {
+            return status;
+        }
+
+        return status + "; " + sunriseStatus;
     }
 }

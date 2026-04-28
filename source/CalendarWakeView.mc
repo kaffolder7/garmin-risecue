@@ -23,26 +23,30 @@ class CalendarWakeView extends WatchUi.View {
         var enabled = CalendarWakeConfig.isEnabled();
         var endpoint = CalendarWakeConfig.getEndpointUrl();
         var configured = endpoint != null && !endpoint.equals("");
+        var sunriseEnabled = CalendarWakeConfig.isSunriseEnabled();
+        var sunriseConfigured = CalendarWakeConfig.getSunriseLatitude() != null
+            && CalendarWakeConfig.getSunriseLongitude() != null;
         var status = Storage.getValue(CalendarWakeConfig.STORAGE_STATUS);
         var eventTitle = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_EVENT_TITLE);
         var eventStart = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_EVENT_START);
         var alertEpoch = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_ALERT_EPOCH);
 
-        drawRow(dc, "Enabled", enabled ? "Yes" : "No", (height * 34) / 100);
-        drawRow(dc, "Endpoint", configured ? "Set" : "Missing", (height * 44) / 100);
-        drawRow(dc, "Sleep trigger", Background.getSleepEventRegistered() ? "Ready" : "Not set", (height * 54) / 100);
+        drawRow(dc, "Enabled", enabled ? "Yes" : "No", (height * 30) / 100);
+        drawRow(dc, "Endpoint", configured ? "Set" : "Missing", (height * 40) / 100);
+        drawRow(dc, "Sunrise", sunriseEnabled ? (sunriseConfigured ? "On" : "Setup") : "Off", (height * 50) / 100);
+        drawRow(dc, "Sleep trigger", Background.getSleepEventRegistered() ? "Ready" : "Not set", (height * 60) / 100);
 
         if (eventTitle != null && eventStart != null) {
-            drawCentered(dc, "Next: " + eventTitle, (height * 68) / 100, Graphics.FONT_XTINY);
-            drawCentered(dc, eventStart, (height * 75) / 100, Graphics.FONT_XTINY);
+            drawCentered(dc, "Next: " + eventTitle, (height * 72) / 100, Graphics.FONT_XTINY);
+            drawCentered(dc, eventStart, (height * 79) / 100, Graphics.FONT_XTINY);
         } else if (status != null) {
-            drawCentered(dc, status, (height * 70) / 100, Graphics.FONT_SMALL);
+            drawCentered(dc, status, (height * 74) / 100, Graphics.FONT_SMALL);
         } else {
-            drawCentered(dc, "Waiting for Sleep Time", (height * 70) / 100, Graphics.FONT_SMALL);
+            drawCentered(dc, "Waiting for Sleep Time", (height * 74) / 100, Graphics.FONT_SMALL);
         }
 
         if (alertEpoch != null) {
-            drawCentered(dc, "Alert epoch: " + alertEpoch, (height * 86) / 100, Graphics.FONT_XTINY);
+            drawCentered(dc, "Alert epoch: " + alertEpoch, (height * 90) / 100, Graphics.FONT_XTINY);
         }
     }
 

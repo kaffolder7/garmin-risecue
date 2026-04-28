@@ -3,7 +3,10 @@ using Toybox.Attention;
 using Toybox.Background;
 using Toybox.Lang;
 using Toybox.Notifications;
+using Toybox.Position;
 using Toybox.Time;
+using Toybox.Time.Gregorian;
+using Toybox.Weather;
 
 module CalendarWakeScheduler {
     const MIN_TEMPORAL_DELAY_SECONDS = 300;
@@ -15,6 +18,11 @@ module CalendarWakeScheduler {
     const MIN_VIBE_STRENGTH = 0;
     const MAX_VIBE_STRENGTH = 100;
     const MAX_VIBE_DURATION = 3000;
+    const WAKE_TARGET_TITLE = "title";
+    const WAKE_TARGET_EPOCH = "epoch";
+    const WAKE_TARGET_DISPLAY = "display";
+    const SUNRISE_RESULT_TARGET = "target";
+    const SUNRISE_RESULT_STATUS = "status";
 
     function registerSleepEvent() {
         try {
@@ -41,6 +49,54 @@ module CalendarWakeScheduler {
         return eventStartEpoch - leadSeconds - bufferSeconds;
     }
 
+    function makeWakeTarget(title, targetEpoch, targetDisplay) {
+        return {
+            WAKE_TARGET_TITLE => title,
+            WAKE_TARGET_EPOCH => targetEpoch,
+            WAKE_TARGET_DISPLAY => targetDisplay
+        };
+    }
+
+    function chooseEarlierWakeTarget(firstTarget, secondTarget) {
+        if (firstTarget == null) {
+            return secondTarget;
+        } else if (secondTarget == null) {
+            return firstTarget;
+        }
+
+        var firstEpoch = firstTarget.get(WAKE_TARGET_EPOCH);
+        var secondEpoch = secondTarget.get(WAKE_TARGET_EPOCH);
+
+        if (firstEpoch == null) {
+            return secondTarget;
+        } else if (secondEpoch == null) {
+            return firstTarget;
+        }
+
+        return firstEpoch <= secondEpoch ? firstTarget : secondTarget;
+    }
+
+    function scheduleWakeTarget(target) {
+        if (target == null) {
+            return false;
+        }
+
+        var title = target.get(WAKE_TARGET_TITLE);
+        var epoch = target.get(WAKE_TARGET_EPOCH);
+        var display = target.get(WAKE_TARGET_DISPLAY);
+
+        if (title == null || epoch == null) {
+            storeStatus("Wake target is invalid");
+            return false;
+        }
+
+        return scheduleAlert(
+            title.toString(),
+            epoch,
+            display == null ? "" : display.toString()
+        );
+    }
+
     function scheduleAlert(eventTitle, eventStartEpoch, eventStartLocal) {
         var alertEpoch = calculateAlertEpoch(eventStartEpoch);
         var scheduled = registerTemporalEvent(alertEpoch);
@@ -56,6 +112,67 @@ module CalendarWakeScheduler {
         }
 
         return scheduled;
+    }
+
+    function createSunriseTargetResult() {
+        if (!CalendarWakeConfig.isSunriseEnabled()) {
+            return makeSunriseResult(null, null);
+        }
+
+        if (!(Weather has :getSunrise)) {
+            return makeSunriseResult(null, "Sunrise is not available on this device");
+        }
+
+        var latitude = CalendarWakeConfig.getSunriseLatitude();
+        var longitude = CalendarWakeConfig.getSunriseLongitude();
+        if (latitude == null || longitude == null) {
+            return makeSunriseResult(null, "Sunrise location is not configured");
+        }
+
+        try {
+            var location = new Position.Location({
+                :latitude => latitude,
+                :longitude => longitude,
+                :format => :degrees
+            });
+            var tomorrow = Time.now().add(new Time.Duration(Gregorian.SECONDS_PER_DAY));
+            var sunrise = Weather.getSunrise(location, tomorrow);
+
+            if (sunrise == null) {
+                return makeSunriseResult(null, "Sunrise time is unavailable");
+            }
+
+            return makeSunriseResult(
+                makeWakeTarget("Sunrise", sunrise.value(), formatSunriseDisplay(location, sunrise)),
+                null
+            );
+        } catch (ex) {
+            return makeSunriseResult(null, "Could not calculate sunrise");
+        }
+    }
+
+    function makeSunriseResult(target, status) {
+        return {
+            SUNRISE_RESULT_TARGET => target,
+            SUNRISE_RESULT_STATUS => status
+        };
+    }
+
+    function getSunriseResultTarget(result) {
+        return result == null ? null : result.get(SUNRISE_RESULT_TARGET);
+    }
+
+    function getSunriseResultStatus(result) {
+        return result == null ? null : result.get(SUNRISE_RESULT_STATUS);
+    }
+
+    function formatSunriseDisplay(location, sunrise) {
+        var localMoment = Gregorian.localMoment(location, sunrise);
+        var info = localMoment == null
+            ? Gregorian.info(sunrise, Time.FORMAT_SHORT)
+            : Gregorian.info(localMoment, Time.FORMAT_SHORT);
+
+        return "Sunrise at " + info.hour.format("%02d") + ":" + info.min.format("%02d");
     }
 
     function scheduleSnooze() {
