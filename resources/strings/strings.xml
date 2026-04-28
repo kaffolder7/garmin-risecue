@@ -11,6 +11,7 @@
         <string id="SettingSunriseEnabledTitle">Enable sunrise alerts</string>
         <string id="SettingSunriseLatitudeTitle">Sunrise latitude</string>
         <string id="SettingSunriseLongitudeTitle">Sunrise longitude</string>
+        <string id="SettingSunriseCoordinatesPrompt">Find coordinates at https://www.latlong.net/ by searching an address or clicking the map, then enter decimal degrees.</string>
         <string id="SettingLeadMinutesTitle">Minutes before event</string>
         <string id="SettingBufferMinutesTitle">Extra buffer minutes</string>
         <string id="SettingMorningStartTitle">Morning window start</string>

@@ -39,10 +39,10 @@
         <setting propertyKey="@Properties.sunriseEnabled" title="@Strings.SettingSunriseEnabledTitle">
             <settingConfig type="boolean" />
         </setting>
-        <setting propertyKey="@Properties.sunriseLatitude" title="@Strings.SettingSunriseLatitudeTitle">
+        <setting propertyKey="@Properties.sunriseLatitude" title="@Strings.SettingSunriseLatitudeTitle" prompt="@Strings.SettingSunriseCoordinatesPrompt" helpUrl="https://www.latlong.net/">
             <settingConfig type="alphaNumeric" required="false" />
         </setting>
-        <setting propertyKey="@Properties.sunriseLongitude" title="@Strings.SettingSunriseLongitudeTitle">
+        <setting propertyKey="@Properties.sunriseLongitude" title="@Strings.SettingSunriseLongitudeTitle" prompt="@Strings.SettingSunriseCoordinatesPrompt" helpUrl="https://www.latlong.net/">
             <settingConfig type="alphaNumeric" required="false" />
         </setting>
         <setting propertyKey="@Properties.leadMinutes" title="@Strings.SettingLeadMinutesTitle">
