@@ -85,15 +85,15 @@ HOST=0.0.0.0
 After deployment, test the endpoint:
 
 ```sh
-curl https://calendar-wake.yourdomain.com/health
-curl -H "X-Calendar-Wake-Token: use-a-long-random-secret" \
-  "https://calendar-wake.yourdomain.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
+curl https://garmin-risecue.yourdomain.com/health
+curl -H "X-RiseCue-Token: use-a-long-random-secret" \
+  "https://garmin-risecue.yourdomain.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
 ```
 
 Use these Garmin app setting values:
 
 ```text
-Calendar endpoint URL: https://calendar-wake.yourdomain.com/next-morning-event
+Calendar endpoint URL: https://garmin-risecue.yourdomain.com/next-morning-event
 Calendar endpoint token: use-a-long-random-secret
 Calendar time zone: leave blank to use the endpoint default, or set an IANA zone such as America/New_York
 ```
@@ -103,7 +103,10 @@ Calendar time zone: leave blank to use the endpoint default, or set an IANA zone
 Install the Garmin Connect IQ SDK. The helper scripts default to the SDK under your home directory:
 
 ```text
-$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin
+"$(find "$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks" \
+  -maxdepth 1 -type d -name 'connectiq-sdk-*' \
+  | sort -V \
+  | tail -n 1)/bin"
 ```
 
 Build all supported watch sizes:
@@ -132,12 +135,15 @@ A Garmin developer/store account is only needed when uploading to the Connect IQ
 Build for an epix Pro Gen 2 47mm:
 
 ```sh
-CONNECTIQ_SDK_BIN="$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin"
+CONNECTIQ_SDK_BIN="$(find "$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks" \
+  -maxdepth 1 -type d -name 'connectiq-sdk-*' \
+  | sort -V \
+  | tail -n 1)/bin"
 export JAVA_HOME=/opt/homebrew/opt/openjdk@21
 PATH="$JAVA_HOME/bin:$PATH" "$CONNECTIQ_SDK_BIN/monkeyc" \
   -f monkey.jungle \
   -d epix2pro47mm \
-  -o bin/CalendarWake-epix2pro47mm.prg \
+  -o bin/RiseCue-epix2pro47mm.prg \
   -y developer_key.der
 ```
 
@@ -152,10 +158,13 @@ npm run build:watch
 For simulator testing, start Garmin's simulator, then run the matching `.prg` for the device:
 
 ```sh
-"$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" \
-  bin/CalendarWake-epix2pro47mm.prg \
+monkeydo \
+  bin/RiseCue-epix2pro47mm.prg \
   epix2pro47mm
 ```
+
+> [!NOTE]
+> Ensure that `monkeydo` is on your `PATH`. You can check this by running: `which monkeydo`.
 
 For physical sideload testing, connect the watch over USB and copy the matching `.prg` into:
 
@@ -166,7 +175,7 @@ For physical sideload testing, connect the watch over USB and copy the matching 
 For an epix Pro Gen 2 47mm, use:
 
 ```text
-bin/CalendarWake-epix2pro47mm.prg
+bin/RiseCue-epix2pro47mm.prg
 ```
 
 Garmin's own guide describes real-device sideloading by placing the compiled program in `GARMIN/APPS`. App settings are often easier to test through the Connect IQ Store preview flow than raw sideloading.
@@ -184,7 +193,7 @@ npm run package:watch
 The package is written to:
 
 ```text
-bin/CalendarWake.iq
+bin/RiseCue.iq
 ```
 
 Before upload, make sure `manifest.xml` includes every product you want to support. Garmin's submission flow is to generate an `.iq` package containing all binaries, upload it to the Connect IQ Store, and wait for Garmin validation/review. While approval is pending, Garmin lets you preview and download the app yourself for testing.
@@ -194,8 +203,8 @@ For the listing, be explicit:
 - RiseCue creates a wake notification/alert, not a native Garmin Alarm.
 - It requires the Background, Communications, and Notifications permissions.
 - It requires a hosted calendar endpoint.
-- Calendar data is processed by your self-hosted endpoint.
-- Include a privacy policy URL, especially because event titles and times may pass through your server.
+- Calendar data is processed by either a free, public (and private) endpoint or you may self-host your own calendar event-processing endpoint.
+- Include the privacy policy URL (e.g. `https://garmin-risecue.yourdomain.com/privacy`, since event titles and times will pass through a public server endpoint.
 
 ## App Settings
 

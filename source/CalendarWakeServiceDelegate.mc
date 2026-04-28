@@ -5,7 +5,7 @@ using Toybox.PersistedContent;
 using Toybox.System;
 
 (:background)
-class CalendarWakeServiceDelegate extends System.ServiceDelegate {
+class RiseCueServiceDelegate extends System.ServiceDelegate {
     var _sunriseTarget;
     var _sunriseStatus;
 
@@ -16,9 +16,9 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
     }
 
     function onSleepTime() {
-        CalendarWakeScheduler.registerWorkflowTriggers();
-        if (CalendarWakeScheduler.isManualWorkflowTimeValid()) {
-            CalendarWakeScheduler.storeStatus("Sleep Time skipped; manual workflow time is set");
+        RiseCueScheduler.registerWorkflowTriggers();
+        if (RiseCueScheduler.isManualWorkflowTimeValid()) {
+            RiseCueScheduler.storeStatus("Sleep Time skipped; manual workflow time is set");
             Background.exit({ "status" => "manual_override" });
             return;
         }
@@ -27,42 +27,42 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
     }
 
     function onTemporalEvent() {
-        if (CalendarWakeScheduler.isManualWorkflowTemporalEvent()) {
-            CalendarWakeScheduler.clearTemporalEventPurpose();
+        if (RiseCueScheduler.isManualWorkflowTemporalEvent()) {
+            RiseCueScheduler.clearTemporalEventPurpose();
             runWakeWorkflow();
             return;
         }
 
-        CalendarWakeScheduler.clearTemporalEventPurpose();
-        CalendarWakeScheduler.registerWorkflowTriggers();
-        CalendarWakeScheduler.showWakeNotification();
+        RiseCueScheduler.clearTemporalEventPurpose();
+        RiseCueScheduler.registerWorkflowTriggers();
+        RiseCueScheduler.showWakeNotification();
         Background.exit({ "status" => "alert_fired" });
     }
 
     function runWakeWorkflow() {
-        CalendarWakeScheduler.registerWorkflowTriggers();
+        RiseCueScheduler.registerWorkflowTriggers();
 
-        if (!CalendarWakeConfig.isEnabled()) {
-            CalendarWakeScheduler.storeStatus("Wake alerts disabled");
+        if (!RiseCueConfig.isEnabled()) {
+            RiseCueScheduler.storeStatus("Wake alerts disabled");
             Background.exit({ "status" => "disabled" });
             return;
         }
 
-        var sunriseResult = CalendarWakeScheduler.createSunriseTargetResult();
-        _sunriseTarget = CalendarWakeScheduler.getSunriseResultTarget(sunriseResult);
-        _sunriseStatus = CalendarWakeScheduler.getSunriseResultStatus(sunriseResult);
+        var sunriseResult = RiseCueScheduler.createSunriseTargetResult();
+        _sunriseTarget = RiseCueScheduler.getSunriseResultTarget(sunriseResult);
+        _sunriseStatus = RiseCueScheduler.getSunriseResultStatus(sunriseResult);
 
-        var endpoint = CalendarWakeConfig.getEndpointUrl();
+        var endpoint = RiseCueConfig.getEndpointUrl();
         if (endpoint == null || endpoint.equals("")) {
             finishWithTarget(null, "Calendar endpoint is not configured", "missing_endpoint", true);
             return;
         }
 
         var params = {
-            "windowStart" => CalendarWakeConfig.getMorningStart(),
-            "windowEnd" => CalendarWakeConfig.getMorningEnd()
+            "windowStart" => RiseCueConfig.getMorningStart(),
+            "windowEnd" => RiseCueConfig.getMorningEnd()
         };
-        var timeZone = CalendarWakeConfig.getTimeZone();
+        var timeZone = RiseCueConfig.getTimeZone();
         if (timeZone != null && !timeZone.equals("")) {
             params["timeZone"] = timeZone;
         }
@@ -70,9 +70,9 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
         var headers = {
             "Accept" => "application/json"
         };
-        var endpointToken = CalendarWakeConfig.getEndpointToken();
+        var endpointToken = RiseCueConfig.getEndpointToken();
         if (endpointToken != null && !endpointToken.equals("")) {
-            headers["X-Calendar-Wake-Token"] = endpointToken;
+            headers["X-RiseCue-Token"] = endpointToken;
         }
 
         var options = {
@@ -82,7 +82,7 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
         };
 
         try {
-            CalendarWakeScheduler.storeStatus("Checking calendar");
+            RiseCueScheduler.storeStatus("Checking calendar");
             Communications.makeWebRequest(endpoint, params, options, method(:onCalendarResponse));
         } catch (ex) {
             finishWithTarget(null, "Calendar request failed", "request_start_failed", true);
@@ -123,25 +123,25 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
             eventStartLocal = responseStartLocal.toString();
         }
 
-        var calendarTarget = CalendarWakeScheduler.makeWakeTarget(eventTitle, eventStartEpoch, eventStartLocal);
+        var calendarTarget = RiseCueScheduler.makeWakeTarget(eventTitle, eventStartEpoch, eventStartLocal);
         finishWithTarget(calendarTarget, "No wake target found", "no_target", false);
     }
 
     function finishWithTarget(calendarTarget, noTargetStatus, noTargetExitStatus, notifyWhenNoTarget) {
-        var target = CalendarWakeScheduler.chooseEarlierWakeTarget(calendarTarget, _sunriseTarget);
+        var target = RiseCueScheduler.chooseEarlierWakeTarget(calendarTarget, _sunriseTarget);
         if (target == null) {
             var status = mergeSunriseStatus(noTargetStatus);
-            CalendarWakeScheduler.storeStatus(status);
+            RiseCueScheduler.storeStatus(status);
             if (notifyWhenNoTarget) {
-                CalendarWakeScheduler.showStatusNotification("Calendar Wake", status + ".");
+                RiseCueScheduler.showStatusNotification("Calendar Wake", status + ".");
             }
             Background.exit({ "status" => noTargetExitStatus });
             return;
         }
 
-        var scheduled = CalendarWakeScheduler.scheduleWakeTarget(target);
+        var scheduled = RiseCueScheduler.scheduleWakeTarget(target);
         if (!scheduled) {
-            CalendarWakeScheduler.showStatusNotification("Calendar Wake", "Could not schedule wake alert.");
+            RiseCueScheduler.showStatusNotification("Calendar Wake", "Could not schedule wake alert.");
             Background.exit({ "status" => "schedule_failed" });
             return;
         }

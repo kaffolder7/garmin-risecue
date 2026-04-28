@@ -257,7 +257,7 @@ export function createServer({
       return;
     }
 
-    if (endpointToken && requestUrl.searchParams.get('token') !== endpointToken && req.headers['x-calendar-wake-token'] !== endpointToken) {
+    if (endpointToken && requestUrl.searchParams.get('token') !== endpointToken && req.headers['x-risecue-token'] !== endpointToken) {
       jsonResponse(res, 401, { error: 'unauthorized' });
       return;
     }

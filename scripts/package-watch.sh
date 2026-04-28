@@ -29,6 +29,6 @@ export PATH="$JAVA_HOME/bin:$PATH"
 "$SDK_BIN/monkeyc" \
   -f "$ROOT_DIR/monkey.jungle" \
   -e \
-  -o "$ROOT_DIR/bin/CalendarWake.iq" \
+  -o "$ROOT_DIR/bin/RiseCue.iq" \
   -y "$KEY_PATH" \
   -w

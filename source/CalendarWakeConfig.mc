@@ -1,6 +1,6 @@
 using Toybox.Application.Properties;
 
-module CalendarWakeConfig {
+module RiseCueConfig {
     const PROP_ENABLED = "enabled";
     const PROP_ENDPOINT_URL = "endpointUrl";
     const PROP_ENDPOINT_TOKEN = "endpointToken";

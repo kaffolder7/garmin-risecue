@@ -8,7 +8,7 @@ using Toybox.Time;
 using Toybox.Time.Gregorian;
 using Toybox.Weather;
 
-module CalendarWakeScheduler {
+module RiseCueScheduler {
     const MIN_TEMPORAL_DELAY_SECONDS = 300;
     const MAX_PATTERN_STEPS = 8;
     const MIN_TONE_FREQUENCY = 100;
@@ -25,7 +25,7 @@ module CalendarWakeScheduler {
     const SUNRISE_RESULT_STATUS = "status";
 
     function registerWorkflowTriggers() {
-        var manualTime = CalendarWakeConfig.getManualWorkflowTime();
+        var manualTime = RiseCueConfig.getManualWorkflowTime();
         var manualParts = parseClockTime(manualTime);
 
         if (manualTime != null && !manualTime.equals("")) {
@@ -73,7 +73,7 @@ module CalendarWakeScheduler {
         var currentPurpose = getTemporalEventPurpose();
         var registeredTime = Background.getTemporalEventRegisteredTime();
         if (currentPurpose != null
-            && currentPurpose.equals(CalendarWakeConfig.TEMPORAL_PURPOSE_ALERT)
+            && currentPurpose.equals(RiseCueConfig.TEMPORAL_PURPOSE_ALERT)
             && registeredTime != null) {
             storeStatus("Wake alert remains scheduled");
             return true;
@@ -87,9 +87,9 @@ module CalendarWakeScheduler {
         );
 
         if (scheduled) {
-            setTemporalEventPurpose(CalendarWakeConfig.TEMPORAL_PURPOSE_WORKFLOW);
+            setTemporalEventPurpose(RiseCueConfig.TEMPORAL_PURPOSE_WORKFLOW);
             try {
-                Storage.setValue(CalendarWakeConfig.STORAGE_WORKFLOW_TRIGGER_EPOCH, triggerEpoch);
+                Storage.setValue(RiseCueConfig.STORAGE_WORKFLOW_TRIGGER_EPOCH, triggerEpoch);
             } catch (ex) {
             }
             storeStatus("Manual workflow trigger scheduled");
@@ -101,7 +101,7 @@ module CalendarWakeScheduler {
     function clearManualWorkflowEvent() {
         var currentPurpose = getTemporalEventPurpose();
         if (currentPurpose == null
-            || !currentPurpose.equals(CalendarWakeConfig.TEMPORAL_PURPOSE_WORKFLOW)) {
+            || !currentPurpose.equals(RiseCueConfig.TEMPORAL_PURPOSE_WORKFLOW)) {
             return;
         }
 
@@ -112,14 +112,14 @@ module CalendarWakeScheduler {
 
         clearTemporalEventPurpose();
         try {
-            Storage.deleteValue(CalendarWakeConfig.STORAGE_WORKFLOW_TRIGGER_EPOCH);
+            Storage.deleteValue(RiseCueConfig.STORAGE_WORKFLOW_TRIGGER_EPOCH);
         } catch (ex) {
         }
     }
 
     function getTemporalEventPurpose() {
         try {
-            var purpose = Storage.getValue(CalendarWakeConfig.STORAGE_TEMPORAL_EVENT_PURPOSE);
+            var purpose = Storage.getValue(RiseCueConfig.STORAGE_TEMPORAL_EVENT_PURPOSE);
             return purpose == null ? null : purpose.toString();
         } catch (ex) {
             return null;
@@ -128,29 +128,29 @@ module CalendarWakeScheduler {
 
     function setTemporalEventPurpose(purpose) {
         try {
-            Storage.setValue(CalendarWakeConfig.STORAGE_TEMPORAL_EVENT_PURPOSE, purpose);
+            Storage.setValue(RiseCueConfig.STORAGE_TEMPORAL_EVENT_PURPOSE, purpose);
         } catch (ex) {
         }
     }
 
     function clearTemporalEventPurpose() {
         try {
-            Storage.deleteValue(CalendarWakeConfig.STORAGE_TEMPORAL_EVENT_PURPOSE);
+            Storage.deleteValue(RiseCueConfig.STORAGE_TEMPORAL_EVENT_PURPOSE);
         } catch (ex) {
         }
     }
 
     function isManualWorkflowTimeValid() {
-        return parseClockTime(CalendarWakeConfig.getManualWorkflowTime()) != null;
+        return parseClockTime(RiseCueConfig.getManualWorkflowTime()) != null;
     }
 
     function isManualWorkflowTemporalEvent() {
         var purpose = getTemporalEventPurpose();
-        return purpose != null && purpose.equals(CalendarWakeConfig.TEMPORAL_PURPOSE_WORKFLOW);
+        return purpose != null && purpose.equals(RiseCueConfig.TEMPORAL_PURPOSE_WORKFLOW);
     }
 
     function getManualWorkflowTimeDisplay() {
-        var parts = parseClockTime(CalendarWakeConfig.getManualWorkflowTime());
+        var parts = parseClockTime(RiseCueConfig.getManualWorkflowTime());
         return parts == null ? null : formatClockTime(parts);
     }
 
@@ -222,15 +222,15 @@ module CalendarWakeScheduler {
 
     function storeStatus(message) {
         try {
-            Storage.setValue(CalendarWakeConfig.STORAGE_STATUS, message);
-            Storage.setValue(CalendarWakeConfig.STORAGE_STATUS_AT, Time.now().value());
+            Storage.setValue(RiseCueConfig.STORAGE_STATUS, message);
+            Storage.setValue(RiseCueConfig.STORAGE_STATUS_AT, Time.now().value());
         } catch (ex) {
         }
     }
 
     function calculateAlertEpoch(eventStartEpoch) {
-        var leadSeconds = CalendarWakeConfig.getLeadMinutes() * 60;
-        var bufferSeconds = CalendarWakeConfig.getBufferMinutes() * 60;
+        var leadSeconds = RiseCueConfig.getLeadMinutes() * 60;
+        var bufferSeconds = RiseCueConfig.getBufferMinutes() * 60;
         return eventStartEpoch - leadSeconds - bufferSeconds;
     }
 
@@ -292,12 +292,12 @@ module CalendarWakeScheduler {
 
         if (scheduled) {
             try {
-                Storage.setValue(CalendarWakeConfig.STORAGE_LAST_EVENT_TITLE, eventTitle);
-                Storage.setValue(CalendarWakeConfig.STORAGE_LAST_EVENT_START, eventStartLocal);
-                Storage.setValue(CalendarWakeConfig.STORAGE_LAST_ALERT_EPOCH, alertEpoch);
+                Storage.setValue(RiseCueConfig.STORAGE_LAST_EVENT_TITLE, eventTitle);
+                Storage.setValue(RiseCueConfig.STORAGE_LAST_EVENT_START, eventStartLocal);
+                Storage.setValue(RiseCueConfig.STORAGE_LAST_ALERT_EPOCH, alertEpoch);
             } catch (ex) {
             }
-            setTemporalEventPurpose(CalendarWakeConfig.TEMPORAL_PURPOSE_ALERT);
+            setTemporalEventPurpose(RiseCueConfig.TEMPORAL_PURPOSE_ALERT);
             storeStatus("Wake alert scheduled");
         }
 
@@ -305,7 +305,7 @@ module CalendarWakeScheduler {
     }
 
     function createSunriseTargetResult() {
-        if (!CalendarWakeConfig.isSunriseEnabled()) {
+        if (!RiseCueConfig.isSunriseEnabled()) {
             return makeSunriseResult(null, null);
         }
 
@@ -313,8 +313,8 @@ module CalendarWakeScheduler {
             return makeSunriseResult(null, "Sunrise is not available on this device");
         }
 
-        var latitude = CalendarWakeConfig.getSunriseLatitude();
-        var longitude = CalendarWakeConfig.getSunriseLongitude();
+        var latitude = RiseCueConfig.getSunriseLatitude();
+        var longitude = RiseCueConfig.getSunriseLongitude();
         if (latitude == null || longitude == null) {
             return makeSunriseResult(null, "Sunrise location is not configured");
         }
@@ -366,14 +366,14 @@ module CalendarWakeScheduler {
     }
 
     function scheduleSnooze() {
-        var snoozeEpoch = Time.now().value() + (CalendarWakeConfig.getSnoozeMinutes() * 60);
+        var snoozeEpoch = Time.now().value() + (RiseCueConfig.getSnoozeMinutes() * 60);
         var scheduled = registerTemporalEvent(
             snoozeEpoch,
             "Snooze time is too soon",
             "Could not schedule snooze"
         );
         if (scheduled) {
-            setTemporalEventPurpose(CalendarWakeConfig.TEMPORAL_PURPOSE_ALERT);
+            setTemporalEventPurpose(RiseCueConfig.TEMPORAL_PURPOSE_ALERT);
             storeStatus("Snoozed wake alert");
         }
         return scheduled;
@@ -382,7 +382,7 @@ module CalendarWakeScheduler {
     function deletePendingAlert() {
         var currentPurpose = getTemporalEventPurpose();
         if (currentPurpose == null
-            || !currentPurpose.equals(CalendarWakeConfig.TEMPORAL_PURPOSE_ALERT)) {
+            || !currentPurpose.equals(RiseCueConfig.TEMPORAL_PURPOSE_ALERT)) {
             return;
         }
 
@@ -411,8 +411,8 @@ module CalendarWakeScheduler {
     }
 
     function showWakeNotification() {
-        var storedTitle = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_EVENT_TITLE);
-        var storedStart = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_EVENT_START);
+        var storedTitle = Storage.getValue(RiseCueConfig.STORAGE_LAST_EVENT_TITLE);
+        var storedStart = Storage.getValue(RiseCueConfig.STORAGE_LAST_EVENT_START);
         var eventTitle = storedTitle == null ? "Calendar event" : storedTitle.toString();
         var eventStartLocal = storedStart == null ? "" : storedStart.toString();
 
@@ -427,8 +427,8 @@ module CalendarWakeScheduler {
                     "eventStartLocal" => eventStartLocal
                 },
                 :actions => [
-                    { :label => "Snooze", :data => CalendarWakeConfig.ACTION_SNOOZE },
-                    { :label => "Dismiss", :data => CalendarWakeConfig.ACTION_DISMISS }
+                    { :label => "Snooze", :data => RiseCueConfig.ACTION_SNOOZE },
+                    { :label => "Dismiss", :data => RiseCueConfig.ACTION_DISMISS }
                 ],
                 :dismissPrevious => true
             });
@@ -439,7 +439,7 @@ module CalendarWakeScheduler {
     }
 
     function renderNotificationBody(eventTitle, eventStartLocal) {
-        var template = CalendarWakeConfig.getNotificationBody();
+        var template = RiseCueConfig.getNotificationBody();
         if (template == null || template.equals("")) {
             template = "Upcoming: {eventTitle} at {eventStartLocal}";
         }
@@ -487,14 +487,14 @@ module CalendarWakeScheduler {
     }
 
     function runAttentionPattern() {
-        var mode = CalendarWakeConfig.getAlertMode();
-        if (mode == CalendarWakeConfig.ALERT_MODE_NOTIFICATION_ONLY) {
+        var mode = RiseCueConfig.getAlertMode();
+        if (mode == RiseCueConfig.ALERT_MODE_NOTIFICATION_ONLY) {
             return;
         }
 
         runVibrationPattern();
 
-        if (mode == CalendarWakeConfig.ALERT_MODE_TONE_VIBRATE) {
+        if (mode == RiseCueConfig.ALERT_MODE_TONE_VIBRATE) {
             runTonePattern();
         }
     }
@@ -516,13 +516,13 @@ module CalendarWakeScheduler {
             return;
         }
 
-        var style = CalendarWakeConfig.getToneStyle();
+        var style = RiseCueConfig.getToneStyle();
 
         try {
-            if (style == CalendarWakeConfig.TONE_STYLE_CUSTOM) {
+            if (style == RiseCueConfig.TONE_STYLE_CUSTOM) {
                 if (Attention has :ToneProfile) {
                     var customPairs = parsePatternPairs(
-                        CalendarWakeConfig.getCustomTonePattern(),
+                        RiseCueConfig.getCustomTonePattern(),
                         MIN_TONE_FREQUENCY,
                         MAX_TONE_FREQUENCY,
                         MIN_PATTERN_DURATION,
@@ -532,7 +532,7 @@ module CalendarWakeScheduler {
                     if (customPairs != null) {
                         Attention.playTone({
                             :toneProfile => getToneProfiles(customPairs),
-                            :repeatCount => clamp(CalendarWakeConfig.getToneRepeatCount(), 1, 5)
+                            :repeatCount => clamp(RiseCueConfig.getToneRepeatCount(), 1, 5)
                         });
                         return;
                     }
@@ -548,15 +548,15 @@ module CalendarWakeScheduler {
     }
 
     function getPredefinedTone(style) {
-        if (style == CalendarWakeConfig.TONE_STYLE_LOUD_BEEP) {
+        if (style == RiseCueConfig.TONE_STYLE_LOUD_BEEP) {
             return Attention.TONE_LOUD_BEEP;
-        } else if (style == CalendarWakeConfig.TONE_STYLE_ALERT_HIGH) {
+        } else if (style == RiseCueConfig.TONE_STYLE_ALERT_HIGH) {
             return Attention.TONE_ALERT_HI;
-        } else if (style == CalendarWakeConfig.TONE_STYLE_ALERT_LOW) {
+        } else if (style == RiseCueConfig.TONE_STYLE_ALERT_LOW) {
             return Attention.TONE_ALERT_LO;
-        } else if (style == CalendarWakeConfig.TONE_STYLE_TIME_ALERT) {
+        } else if (style == RiseCueConfig.TONE_STYLE_TIME_ALERT) {
             return Attention.TONE_TIME_ALERT;
-        } else if (style == CalendarWakeConfig.TONE_STYLE_CANARY) {
+        } else if (style == RiseCueConfig.TONE_STYLE_CANARY) {
             return Attention.TONE_CANARY;
         }
 
@@ -575,11 +575,11 @@ module CalendarWakeScheduler {
     }
 
     function getVibrationProfiles() {
-        var style = CalendarWakeConfig.getVibrationStyle();
+        var style = RiseCueConfig.getVibrationStyle();
 
-        if (style == CalendarWakeConfig.VIBRATION_STYLE_CUSTOM) {
+        if (style == RiseCueConfig.VIBRATION_STYLE_CUSTOM) {
             var customPairs = parsePatternPairs(
-                CalendarWakeConfig.getCustomVibrationPattern(),
+                RiseCueConfig.getCustomVibrationPattern(),
                 MIN_VIBE_STRENGTH,
                 MAX_VIBE_STRENGTH,
                 MIN_PATTERN_DURATION,
@@ -591,11 +591,11 @@ module CalendarWakeScheduler {
             }
 
             storeStatus("Invalid custom vibration pattern");
-        } else if (style == CalendarWakeConfig.VIBRATION_STYLE_LONG_BUZZ) {
+        } else if (style == RiseCueConfig.VIBRATION_STYLE_LONG_BUZZ) {
             return [
                 new Attention.VibeProfile(75, 2500)
             ];
-        } else if (style == CalendarWakeConfig.VIBRATION_STYLE_PROGRESSIVE_RAMP) {
+        } else if (style == RiseCueConfig.VIBRATION_STYLE_PROGRESSIVE_RAMP) {
             return [
                 new Attention.VibeProfile(20, 500),
                 new Attention.VibeProfile(0, 150),
@@ -606,7 +606,7 @@ module CalendarWakeScheduler {
                 new Attention.VibeProfile(75, 800),
                 new Attention.VibeProfile(90, 1000)
             ];
-        } else if (style == CalendarWakeConfig.VIBRATION_STYLE_URGENT_PULSE) {
+        } else if (style == RiseCueConfig.VIBRATION_STYLE_URGENT_PULSE) {
             return [
                 new Attention.VibeProfile(100, 250),
                 new Attention.VibeProfile(0, 120),

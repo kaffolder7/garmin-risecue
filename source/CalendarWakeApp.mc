@@ -4,27 +4,27 @@ using Toybox.Notifications;
 using Toybox.WatchUi;
 
 (:background)
-class CalendarWakeApp extends Application.AppBase {
+class RiseCueApp extends Application.AppBase {
     function initialize() {
         AppBase.initialize();
     }
 
     function onStart(state) {
-        CalendarWakeScheduler.registerWorkflowTriggers();
+        RiseCueScheduler.registerWorkflowTriggers();
         registerNotificationMessages();
     }
 
     function onSettingsChanged() {
-        CalendarWakeScheduler.registerWorkflowTriggers();
+        RiseCueScheduler.registerWorkflowTriggers();
         WatchUi.requestUpdate();
     }
 
     function getInitialView() {
-        return [ new CalendarWakeView(), new CalendarWakeDelegate() ];
+        return [ new RiseCueView(), new RiseCueDelegate() ];
     }
 
     function getServiceDelegate() {
-        return [ new CalendarWakeServiceDelegate() ];
+        return [ new RiseCueServiceDelegate() ];
     }
 
     function onBackgroundData(data) {
@@ -33,14 +33,14 @@ class CalendarWakeApp extends Application.AppBase {
 
     function onNotificationMessage(message as Notifications.NotificationMessage) as Void {
         if (message.type == Notifications.NOTIFICATION_MESSAGE_TYPE_SELECTED) {
-            if (message.action == CalendarWakeConfig.ACTION_SNOOZE) {
-                if (CalendarWakeScheduler.scheduleSnooze()) {
-                    CalendarWakeScheduler.showStatusNotification("Snoozed", "Wake alert moved by " + CalendarWakeConfig.getSnoozeMinutes() + " minutes.");
+            if (message.action == RiseCueConfig.ACTION_SNOOZE) {
+                if (RiseCueScheduler.scheduleSnooze()) {
+                    RiseCueScheduler.showStatusNotification("Snoozed", "Wake alert moved by " + RiseCueConfig.getSnoozeMinutes() + " minutes.");
                 }
-            } else if (message.action == CalendarWakeConfig.ACTION_DISMISS) {
-                CalendarWakeScheduler.deletePendingAlert();
-                CalendarWakeScheduler.registerWorkflowTriggers();
-                CalendarWakeScheduler.storeStatus("Wake alert dismissed");
+            } else if (message.action == RiseCueConfig.ACTION_DISMISS) {
+                RiseCueScheduler.deletePendingAlert();
+                RiseCueScheduler.registerWorkflowTriggers();
+                RiseCueScheduler.storeStatus("Wake alert dismissed");
             }
         }
 
@@ -52,7 +52,7 @@ class CalendarWakeApp extends Application.AppBase {
             try {
                 Notifications.registerForNotificationMessages(method(:onNotificationMessage));
             } catch (ex) {
-                CalendarWakeScheduler.storeStatus("Could not register notification actions");
+                RiseCueScheduler.storeStatus("Could not register notification actions");
             }
         }
     }

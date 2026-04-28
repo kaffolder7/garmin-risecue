@@ -1,12 +1,12 @@
 using Toybox.WatchUi;
 
-class CalendarWakeDelegate extends WatchUi.BehaviorDelegate {
+class RiseCueDelegate extends WatchUi.BehaviorDelegate {
     function initialize() {
         BehaviorDelegate.initialize();
     }
 
     function onSelect() {
-        CalendarWakeScheduler.registerWorkflowTriggers();
+        RiseCueScheduler.registerWorkflowTriggers();
         WatchUi.requestUpdate();
         return true;
     }

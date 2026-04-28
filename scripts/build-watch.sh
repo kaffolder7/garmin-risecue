@@ -38,7 +38,7 @@ for DEVICE in "${DEVICES[@]}"; do
   "$SDK_BIN/monkeyc" \
     -f "$ROOT_DIR/monkey.jungle" \
     -d "$DEVICE" \
-    -o "$ROOT_DIR/bin/CalendarWake-$DEVICE.prg" \
+    -o "$ROOT_DIR/bin/RiseCue-$DEVICE.prg" \
     -y "$KEY_PATH" \
     -w
 done

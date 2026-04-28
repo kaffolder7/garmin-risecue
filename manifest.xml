@@ -4,7 +4,7 @@
         id="ed0c3a66-cd32-47de-8d36-0314c73abc7b"
         type="watch-app"
         name="@Strings.AppName"
-        entry="CalendarWakeApp"
+        entry="RiseCueApp"
         launcherIcon="@Drawables.LauncherIcon"
         minApiLevel="5.1.0">
         <iq:products>

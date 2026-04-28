@@ -4,7 +4,7 @@ using Toybox.Graphics;
 using Toybox.Time;
 using Toybox.WatchUi;
 
-class CalendarWakeView extends WatchUi.View {
+class RiseCueView extends WatchUi.View {
     function initialize() {
         View.initialize();
     }
@@ -20,22 +20,22 @@ class CalendarWakeView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(centerX, (height * 15) / 100, Graphics.FONT_LARGE, "Calendar Wake", Graphics.TEXT_JUSTIFY_CENTER);
 
-        var enabled = CalendarWakeConfig.isEnabled();
-        var endpoint = CalendarWakeConfig.getEndpointUrl();
+        var enabled = RiseCueConfig.isEnabled();
+        var endpoint = RiseCueConfig.getEndpointUrl();
         var configured = endpoint != null && !endpoint.equals("");
-        var sunriseEnabled = CalendarWakeConfig.isSunriseEnabled();
-        var sunriseConfigured = CalendarWakeConfig.getSunriseLatitude() != null
-            && CalendarWakeConfig.getSunriseLongitude() != null;
-        var manualTime = CalendarWakeConfig.getManualWorkflowTime();
-        var manualDisplay = CalendarWakeScheduler.getManualWorkflowTimeDisplay();
+        var sunriseEnabled = RiseCueConfig.isSunriseEnabled();
+        var sunriseConfigured = RiseCueConfig.getSunriseLatitude() != null
+            && RiseCueConfig.getSunriseLongitude() != null;
+        var manualTime = RiseCueConfig.getManualWorkflowTime();
+        var manualDisplay = RiseCueScheduler.getManualWorkflowTimeDisplay();
         var manualConfigured = manualDisplay != null;
         var manualStatus = manualConfigured
             ? manualDisplay
             : ((manualTime != null && !manualTime.equals("")) ? "Invalid" : "Off");
-        var status = Storage.getValue(CalendarWakeConfig.STORAGE_STATUS);
-        var eventTitle = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_EVENT_TITLE);
-        var eventStart = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_EVENT_START);
-        var alertEpoch = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_ALERT_EPOCH);
+        var status = Storage.getValue(RiseCueConfig.STORAGE_STATUS);
+        var eventTitle = Storage.getValue(RiseCueConfig.STORAGE_LAST_EVENT_TITLE);
+        var eventStart = Storage.getValue(RiseCueConfig.STORAGE_LAST_EVENT_START);
+        var alertEpoch = Storage.getValue(RiseCueConfig.STORAGE_LAST_ALERT_EPOCH);
 
         drawRow(dc, "Enabled", enabled ? "Yes" : "No", (height * 30) / 100);
         drawRow(dc, "Endpoint", configured ? "Set" : "Missing", (height * 38) / 100);
