@@ -2,3 +2,59 @@ project.manifest = manifest.xml
 base.sourcePath = source
 base.resourcePath = resources
 
+launcherIcon38 = resources-launcher-38x38
+launcherIcon40 = resources-launcher-40x40
+launcherIcon52 = resources-launcher-52x52
+launcherIcon54 = resources-launcher-54x54
+launcherIcon56 = resources-launcher-56x56
+launcherIcon62 = resources-launcher-62x62
+launcherIcon65 = resources-launcher-65x65
+launcherIcon70 = resources-launcher-70x70
+
+# Device launcher icon overrides. The base 60x60 icon remains the default for
+# devices whose compiler definition already expects 60x60.
+instinctcrossoveramoled.resourcePath = $(instinctcrossoveramoled.resourcePath);$(launcherIcon38)
+
+enduro3.resourcePath = $(enduro3.resourcePath);$(launcherIcon40)
+fenix7.resourcePath = $(fenix7.resourcePath);$(launcherIcon40)
+fenix7pro.resourcePath = $(fenix7pro.resourcePath);$(launcherIcon40)
+fenix7pronowifi.resourcePath = $(fenix7pronowifi.resourcePath);$(launcherIcon40)
+fenix7s.resourcePath = $(fenix7s.resourcePath);$(launcherIcon40)
+fenix7spro.resourcePath = $(fenix7spro.resourcePath);$(launcherIcon40)
+fenix7x.resourcePath = $(fenix7x.resourcePath);$(launcherIcon40)
+fenix7xpro.resourcePath = $(fenix7xpro.resourcePath);$(launcherIcon40)
+fenix7xpronowifi.resourcePath = $(fenix7xpronowifi.resourcePath);$(launcherIcon40)
+fenix8solar47mm.resourcePath = $(fenix8solar47mm.resourcePath);$(launcherIcon40)
+fenix8solar51mm.resourcePath = $(fenix8solar51mm.resourcePath);$(launcherIcon40)
+fr255.resourcePath = $(fr255.resourcePath);$(launcherIcon40)
+fr255m.resourcePath = $(fr255m.resourcePath);$(launcherIcon40)
+fr255s.resourcePath = $(fr255s.resourcePath);$(launcherIcon40)
+fr255sm.resourcePath = $(fr255sm.resourcePath);$(launcherIcon40)
+fr955.resourcePath = $(fr955.resourcePath);$(launcherIcon40)
+
+instincte40mm.resourcePath = $(instincte40mm.resourcePath);$(launcherIcon52)
+
+fr165.resourcePath = $(fr165.resourcePath);$(launcherIcon54)
+fr165m.resourcePath = $(fr165m.resourcePath);$(launcherIcon54)
+fr57042mm.resourcePath = $(fr57042mm.resourcePath);$(launcherIcon54)
+venu441mm.resourcePath = $(venu441mm.resourcePath);$(launcherIcon54)
+vivoactive6.resourcePath = $(vivoactive6.resourcePath);$(launcherIcon54)
+
+approachs50.resourcePath = $(approachs50.resourcePath);$(launcherIcon56)
+vivoactive5.resourcePath = $(vivoactive5.resourcePath);$(launcherIcon56)
+
+instincte45mm.resourcePath = $(instincte45mm.resourcePath);$(launcherIcon62)
+
+d2mach2.resourcePath = $(d2mach2.resourcePath);$(launcherIcon65)
+d2mach2pro.resourcePath = $(d2mach2pro.resourcePath);$(launcherIcon65)
+fenix847mm.resourcePath = $(fenix847mm.resourcePath);$(launcherIcon65)
+fenix8pro47mm.resourcePath = $(fenix8pro47mm.resourcePath);$(launcherIcon65)
+fr57047mm.resourcePath = $(fr57047mm.resourcePath);$(launcherIcon65)
+fr965.resourcePath = $(fr965.resourcePath);$(launcherIcon65)
+fr970.resourcePath = $(fr970.resourcePath);$(launcherIcon65)
+venu445mm.resourcePath = $(venu445mm.resourcePath);$(launcherIcon65)
+venux1.resourcePath = $(venux1.resourcePath);$(launcherIcon65)
+
+approachs7047mm.resourcePath = $(approachs7047mm.resourcePath);$(launcherIcon70)
+venu3.resourcePath = $(venu3.resourcePath);$(launcherIcon70)
+venu3s.resourcePath = $(venu3s.resourcePath);$(launcherIcon70)
