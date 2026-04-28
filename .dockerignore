@@ -1,0 +1,12 @@
+.DS_Store
+.env
+.git
+bin
+developer_key.der
+node_modules
+resources
+scripts
+source
+*.iq
+*.prg
+

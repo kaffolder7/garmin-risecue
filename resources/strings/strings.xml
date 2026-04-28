@@ -1,0 +1,36 @@
+<resources>
+    <strings>
+        <string id="AppName">Calendar Wake</string>
+        <string id="SettingEnabledTitle">Enable wake alerts</string>
+        <string id="SettingEndpointTitle">Calendar endpoint URL</string>
+        <string id="SettingEndpointTokenTitle">Calendar endpoint token</string>
+        <string id="SettingNotificationBodyTitle">Notification body</string>
+        <string id="SettingTimeZoneTitle">Calendar time zone</string>
+        <string id="SettingLeadMinutesTitle">Minutes before event</string>
+        <string id="SettingBufferMinutesTitle">Extra buffer minutes</string>
+        <string id="SettingMorningStartTitle">Morning window start</string>
+        <string id="SettingMorningEndTitle">Morning window end</string>
+        <string id="SettingSnoozeMinutesTitle">Snooze minutes</string>
+        <string id="SettingAlertModeTitle">Alert mode</string>
+        <string id="SettingToneStyleTitle">Tone style</string>
+        <string id="SettingCustomTonePatternTitle">Custom tone pattern</string>
+        <string id="SettingToneRepeatCountTitle">Tone repeat count</string>
+        <string id="SettingVibrationStyleTitle">Vibration style</string>
+        <string id="SettingCustomVibrationPatternTitle">Custom vibration pattern</string>
+        <string id="AlertModeVibrate">Vibrate</string>
+        <string id="AlertModeToneVibrate">Tone and vibrate</string>
+        <string id="AlertModeNotificationOnly">Notification only</string>
+        <string id="ToneStyleAlarm">Alarm</string>
+        <string id="ToneStyleLoudBeep">Loud beep</string>
+        <string id="ToneStyleAlertHigh">Alert high</string>
+        <string id="ToneStyleAlertLow">Alert low</string>
+        <string id="ToneStyleTimeAlert">Time alert</string>
+        <string id="ToneStyleCanary">Canary</string>
+        <string id="ToneStyleCustom">Custom pattern</string>
+        <string id="VibrationStyleDoublePulse">Double pulse</string>
+        <string id="VibrationStyleLongBuzz">Long buzz</string>
+        <string id="VibrationStyleProgressiveRamp">Progressive ramp</string>
+        <string id="VibrationStyleUrgentPulse">Urgent pulse</string>
+        <string id="VibrationStyleCustom">Custom pattern</string>
+    </strings>
+</resources>

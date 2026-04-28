@@ -1,0 +1,19 @@
+{
+  "name": "risecue",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Garmin Connect IQ wake-alert app plus a small ICS-to-JSON calendar endpoint.",
+  "scripts": {
+    "build:watch": "scripts/build-watch.sh",
+    "package:watch": "scripts/package-watch.sh",
+    "start": "node endpoint/server.mjs",
+    "test": "node --test endpoint/*.test.mjs"
+  },
+  "dependencies": {
+    "node-ical": "^0.26.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

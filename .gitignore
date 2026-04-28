@@ -1,0 +1,8 @@
+bin/
+node_modules/
+*.prg
+*.iq
+*.der
+.env
+.DS_Store
+

@@ -1,0 +1,20 @@
+<resources>
+    <properties>
+        <property id="enabled" type="boolean">true</property>
+        <property id="endpointUrl" type="string"></property>
+        <property id="endpointToken" type="string"></property>
+        <property id="notificationBody" type="string">Upcoming: {eventTitle} at {eventStartLocal}</property>
+        <property id="timeZone" type="string">America/Indiana/Indianapolis</property>
+        <property id="leadMinutes" type="number">60</property>
+        <property id="bufferMinutes" type="number">0</property>
+        <property id="morningStart" type="string">04:00</property>
+        <property id="morningEnd" type="string">12:00</property>
+        <property id="snoozeMinutes" type="number">10</property>
+        <property id="alertMode" type="number">0</property>
+        <property id="toneStyle" type="number">0</property>
+        <property id="customTonePattern" type="string"></property>
+        <property id="toneRepeatCount" type="number">1</property>
+        <property id="vibrationStyle" type="number">0</property>
+        <property id="customVibrationPattern" type="string"></property>
+    </properties>
+</resources>

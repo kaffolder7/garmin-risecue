@@ -1,0 +1,70 @@
+<resources>
+    <settings>
+        <setting propertyKey="@Properties.enabled" title="@Strings.SettingEnabledTitle">
+            <settingConfig type="boolean" />
+        </setting>
+        <setting propertyKey="@Properties.endpointUrl" title="@Strings.SettingEndpointTitle">
+            <settingConfig type="alphaNumeric" required="true" />
+        </setting>
+        <setting propertyKey="@Properties.endpointToken" title="@Strings.SettingEndpointTokenTitle">
+            <settingConfig type="alphaNumeric" required="false" />
+        </setting>
+        <setting propertyKey="@Properties.notificationBody" title="@Strings.SettingNotificationBodyTitle">
+            <settingConfig type="alphaNumeric" required="true" />
+        </setting>
+        <setting propertyKey="@Properties.timeZone" title="@Strings.SettingTimeZoneTitle">
+            <settingConfig type="alphaNumeric" required="true" />
+        </setting>
+        <setting propertyKey="@Properties.leadMinutes" title="@Strings.SettingLeadMinutesTitle">
+            <settingConfig type="numeric" min="0" max="240" required="true" />
+        </setting>
+        <setting propertyKey="@Properties.bufferMinutes" title="@Strings.SettingBufferMinutesTitle">
+            <settingConfig type="numeric" min="0" max="240" required="true" />
+        </setting>
+        <setting propertyKey="@Properties.morningStart" title="@Strings.SettingMorningStartTitle">
+            <settingConfig type="alphaNumeric" required="true" />
+        </setting>
+        <setting propertyKey="@Properties.morningEnd" title="@Strings.SettingMorningEndTitle">
+            <settingConfig type="alphaNumeric" required="true" />
+        </setting>
+        <setting propertyKey="@Properties.snoozeMinutes" title="@Strings.SettingSnoozeMinutesTitle">
+            <settingConfig type="numeric" min="5" max="60" required="true" />
+        </setting>
+        <setting propertyKey="@Properties.alertMode" title="@Strings.SettingAlertModeTitle">
+            <settingConfig type="list" required="true">
+                <listEntry value="0">@Strings.AlertModeVibrate</listEntry>
+                <listEntry value="1">@Strings.AlertModeToneVibrate</listEntry>
+                <listEntry value="2">@Strings.AlertModeNotificationOnly</listEntry>
+            </settingConfig>
+        </setting>
+        <setting propertyKey="@Properties.toneStyle" title="@Strings.SettingToneStyleTitle">
+            <settingConfig type="list" required="true">
+                <listEntry value="0">@Strings.ToneStyleAlarm</listEntry>
+                <listEntry value="1">@Strings.ToneStyleLoudBeep</listEntry>
+                <listEntry value="2">@Strings.ToneStyleAlertHigh</listEntry>
+                <listEntry value="3">@Strings.ToneStyleAlertLow</listEntry>
+                <listEntry value="4">@Strings.ToneStyleTimeAlert</listEntry>
+                <listEntry value="5">@Strings.ToneStyleCanary</listEntry>
+                <listEntry value="6">@Strings.ToneStyleCustom</listEntry>
+            </settingConfig>
+        </setting>
+        <setting propertyKey="@Properties.customTonePattern" title="@Strings.SettingCustomTonePatternTitle">
+            <settingConfig type="alphaNumeric" required="false" />
+        </setting>
+        <setting propertyKey="@Properties.toneRepeatCount" title="@Strings.SettingToneRepeatCountTitle">
+            <settingConfig type="numeric" min="1" max="5" required="true" />
+        </setting>
+        <setting propertyKey="@Properties.vibrationStyle" title="@Strings.SettingVibrationStyleTitle">
+            <settingConfig type="list" required="true">
+                <listEntry value="0">@Strings.VibrationStyleDoublePulse</listEntry>
+                <listEntry value="1">@Strings.VibrationStyleLongBuzz</listEntry>
+                <listEntry value="2">@Strings.VibrationStyleProgressiveRamp</listEntry>
+                <listEntry value="3">@Strings.VibrationStyleUrgentPulse</listEntry>
+                <listEntry value="4">@Strings.VibrationStyleCustom</listEntry>
+            </settingConfig>
+        </setting>
+        <setting propertyKey="@Properties.customVibrationPattern" title="@Strings.SettingCustomVibrationPatternTitle">
+            <settingConfig type="alphaNumeric" required="false" />
+        </setting>
+    </settings>
+</resources>
