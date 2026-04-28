@@ -2,6 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONNECTIQ_SDK_BIN="$(find "$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks" \
+  -maxdepth 1 -type d -name 'connectiq-sdk-*' \
+  | sort -V \
+  | tail -n 1)/bin"
 SDK_BIN="${CONNECTIQ_SDK_BIN:-$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin}"
 JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@21}"
 KEY_PATH="${CONNECTIQ_DEVELOPER_KEY:-$ROOT_DIR/developer_key.der}"
