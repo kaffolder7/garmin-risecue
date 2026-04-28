@@ -95,7 +95,7 @@ Use these Garmin app setting values:
 ```text
 Calendar endpoint URL: https://garmin-risecue.yourdomain.com/next-morning-event
 Calendar endpoint token: use-a-long-random-secret
-Calendar time zone: leave blank to use the endpoint default, or set an IANA zone such as America/New_York
+Calendar time zone: choose Endpoint default, UTC, or a common IANA zone such as America/New_York
 ```
 
 ## Watch Build

@@ -13,7 +13,22 @@
             <settingConfig type="alphaNumeric" required="true" />
         </setting>
         <setting propertyKey="@Properties.timeZone" title="@Strings.SettingTimeZoneTitle">
-            <settingConfig type="alphaNumeric" required="false" />
+            <settingConfig type="list" required="false">
+                <listEntry value="0">@Strings.TimeZoneEndpointDefault</listEntry>
+                <listEntry value="1">@Strings.TimeZoneUtc</listEntry>
+                <listEntry value="2">@Strings.TimeZoneAmericaNewYork</listEntry>
+                <listEntry value="3">@Strings.TimeZoneAmericaChicago</listEntry>
+                <listEntry value="4">@Strings.TimeZoneAmericaDenver</listEntry>
+                <listEntry value="5">@Strings.TimeZoneAmericaPhoenix</listEntry>
+                <listEntry value="6">@Strings.TimeZoneAmericaLosAngeles</listEntry>
+                <listEntry value="7">@Strings.TimeZoneAmericaAnchorage</listEntry>
+                <listEntry value="8">@Strings.TimeZonePacificHonolulu</listEntry>
+                <listEntry value="9">@Strings.TimeZoneEuropeLondon</listEntry>
+                <listEntry value="10">@Strings.TimeZoneEuropeParis</listEntry>
+                <listEntry value="11">@Strings.TimeZoneAsiaTokyo</listEntry>
+                <listEntry value="12">@Strings.TimeZoneAsiaSingapore</listEntry>
+                <listEntry value="13">@Strings.TimeZoneAustraliaSydney</listEntry>
+            </settingConfig>
         </setting>
         <setting propertyKey="@Properties.manualWorkflowTime" title="@Strings.SettingManualWorkflowTimeTitle">
             <settingConfig type="alphaNumeric" required="false" />

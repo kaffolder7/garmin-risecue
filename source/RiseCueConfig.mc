@@ -41,6 +41,21 @@ module RiseCueConfig {
     const VIBRATION_STYLE_URGENT_PULSE = 3;
     const VIBRATION_STYLE_CUSTOM = 4;
 
+    const TIME_ZONE_ENDPOINT_DEFAULT = 0;
+    const TIME_ZONE_UTC = 1;
+    const TIME_ZONE_AMERICA_NEW_YORK = 2;
+    const TIME_ZONE_AMERICA_CHICAGO = 3;
+    const TIME_ZONE_AMERICA_DENVER = 4;
+    const TIME_ZONE_AMERICA_PHOENIX = 5;
+    const TIME_ZONE_AMERICA_LOS_ANGELES = 6;
+    const TIME_ZONE_AMERICA_ANCHORAGE = 7;
+    const TIME_ZONE_PACIFIC_HONOLULU = 8;
+    const TIME_ZONE_EUROPE_LONDON = 9;
+    const TIME_ZONE_EUROPE_PARIS = 10;
+    const TIME_ZONE_ASIA_TOKYO = 11;
+    const TIME_ZONE_ASIA_SINGAPORE = 12;
+    const TIME_ZONE_AUSTRALIA_SYDNEY = 13;
+
     const ACTION_SNOOZE = "snooze";
     const ACTION_DISMISS = "dismiss";
 
@@ -102,7 +117,36 @@ module RiseCueConfig {
     }
 
     function getTimeZone() {
-        return getString(PROP_TIME_ZONE, "");
+        var value = getNumber(PROP_TIME_ZONE, TIME_ZONE_ENDPOINT_DEFAULT);
+        if (value == TIME_ZONE_UTC) {
+            return "UTC";
+        } else if (value == TIME_ZONE_AMERICA_NEW_YORK) {
+            return "America/New_York";
+        } else if (value == TIME_ZONE_AMERICA_CHICAGO) {
+            return "America/Chicago";
+        } else if (value == TIME_ZONE_AMERICA_DENVER) {
+            return "America/Denver";
+        } else if (value == TIME_ZONE_AMERICA_PHOENIX) {
+            return "America/Phoenix";
+        } else if (value == TIME_ZONE_AMERICA_LOS_ANGELES) {
+            return "America/Los_Angeles";
+        } else if (value == TIME_ZONE_AMERICA_ANCHORAGE) {
+            return "America/Anchorage";
+        } else if (value == TIME_ZONE_PACIFIC_HONOLULU) {
+            return "Pacific/Honolulu";
+        } else if (value == TIME_ZONE_EUROPE_LONDON) {
+            return "Europe/London";
+        } else if (value == TIME_ZONE_EUROPE_PARIS) {
+            return "Europe/Paris";
+        } else if (value == TIME_ZONE_ASIA_TOKYO) {
+            return "Asia/Tokyo";
+        } else if (value == TIME_ZONE_ASIA_SINGAPORE) {
+            return "Asia/Singapore";
+        } else if (value == TIME_ZONE_AUSTRALIA_SYDNEY) {
+            return "Australia/Sydney";
+        }
+
+        return "";
     }
 
     function getManualWorkflowTime() {
