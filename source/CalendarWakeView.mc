@@ -26,15 +26,22 @@ class CalendarWakeView extends WatchUi.View {
         var sunriseEnabled = CalendarWakeConfig.isSunriseEnabled();
         var sunriseConfigured = CalendarWakeConfig.getSunriseLatitude() != null
             && CalendarWakeConfig.getSunriseLongitude() != null;
+        var manualTime = CalendarWakeConfig.getManualWorkflowTime();
+        var manualDisplay = CalendarWakeScheduler.getManualWorkflowTimeDisplay();
+        var manualConfigured = manualDisplay != null;
+        var manualStatus = manualConfigured
+            ? manualDisplay
+            : ((manualTime != null && !manualTime.equals("")) ? "Invalid" : "Off");
         var status = Storage.getValue(CalendarWakeConfig.STORAGE_STATUS);
         var eventTitle = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_EVENT_TITLE);
         var eventStart = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_EVENT_START);
         var alertEpoch = Storage.getValue(CalendarWakeConfig.STORAGE_LAST_ALERT_EPOCH);
 
         drawRow(dc, "Enabled", enabled ? "Yes" : "No", (height * 30) / 100);
-        drawRow(dc, "Endpoint", configured ? "Set" : "Missing", (height * 40) / 100);
-        drawRow(dc, "Sunrise", sunriseEnabled ? (sunriseConfigured ? "On" : "Setup") : "Off", (height * 50) / 100);
-        drawRow(dc, "Sleep trigger", Background.getSleepEventRegistered() ? "Ready" : "Not set", (height * 60) / 100);
+        drawRow(dc, "Endpoint", configured ? "Set" : "Missing", (height * 38) / 100);
+        drawRow(dc, "Sunrise", sunriseEnabled ? (sunriseConfigured ? "On" : "Setup") : "Off", (height * 46) / 100);
+        drawRow(dc, "Manual run", manualStatus, (height * 54) / 100);
+        drawRow(dc, "Trigger", manualConfigured ? "Manual" : (Background.getSleepEventRegistered() ? "Sleep" : "Not set"), (height * 62) / 100);
 
         if (eventTitle != null && eventStart != null) {
             drawCentered(dc, "Next: " + eventTitle, (height * 72) / 100, Graphics.FONT_XTINY);
@@ -42,7 +49,7 @@ class CalendarWakeView extends WatchUi.View {
         } else if (status != null) {
             drawCentered(dc, status, (height * 74) / 100, Graphics.FONT_SMALL);
         } else {
-            drawCentered(dc, "Waiting for Sleep Time", (height * 74) / 100, Graphics.FONT_SMALL);
+            drawCentered(dc, "Waiting for trigger", (height * 74) / 100, Graphics.FONT_SMALL);
         }
 
         if (alertEpoch != null) {

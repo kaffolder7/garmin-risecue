@@ -24,6 +24,31 @@ module CalendarWakeScheduler {
     const SUNRISE_RESULT_TARGET = "target";
     const SUNRISE_RESULT_STATUS = "status";
 
+    function registerWorkflowTriggers() {
+        var manualTime = CalendarWakeConfig.getManualWorkflowTime();
+        var manualParts = parseClockTime(manualTime);
+
+        if (manualTime != null && !manualTime.equals("")) {
+            if (manualParts == null) {
+                clearManualWorkflowEvent();
+                registerSleepEvent();
+                storeStatus("Manual workflow time must be HH:MM");
+                return false;
+            }
+
+            deleteSleepEvent();
+            var manualScheduled = registerManualWorkflowEvent(manualParts);
+            if (!manualScheduled) {
+                registerSleepEvent();
+            }
+            return manualScheduled;
+        }
+
+        clearManualWorkflowEvent();
+        registerSleepEvent();
+        return true;
+    }
+
     function registerSleepEvent() {
         try {
             if (!Background.getSleepEventRegistered()) {
@@ -33,6 +58,166 @@ module CalendarWakeScheduler {
         } catch (ex) {
             storeStatus("Could not register Sleep Time trigger");
         }
+    }
+
+    function deleteSleepEvent() {
+        try {
+            if (Background.getSleepEventRegistered()) {
+                Background.deleteSleepEvent();
+            }
+        } catch (ex) {
+        }
+    }
+
+    function registerManualWorkflowEvent(manualParts) {
+        var currentPurpose = getTemporalEventPurpose();
+        var registeredTime = Background.getTemporalEventRegisteredTime();
+        if (currentPurpose != null
+            && currentPurpose.equals(CalendarWakeConfig.TEMPORAL_PURPOSE_ALERT)
+            && registeredTime != null) {
+            storeStatus("Wake alert remains scheduled");
+            return true;
+        }
+
+        var triggerEpoch = calculateNextManualWorkflowEpoch(manualParts);
+        var scheduled = registerTemporalEvent(
+            triggerEpoch,
+            "Manual workflow time is too soon",
+            "Could not schedule manual workflow"
+        );
+
+        if (scheduled) {
+            setTemporalEventPurpose(CalendarWakeConfig.TEMPORAL_PURPOSE_WORKFLOW);
+            try {
+                Storage.setValue(CalendarWakeConfig.STORAGE_WORKFLOW_TRIGGER_EPOCH, triggerEpoch);
+            } catch (ex) {
+            }
+            storeStatus("Manual workflow trigger scheduled");
+        }
+
+        return scheduled;
+    }
+
+    function clearManualWorkflowEvent() {
+        var currentPurpose = getTemporalEventPurpose();
+        if (currentPurpose == null
+            || !currentPurpose.equals(CalendarWakeConfig.TEMPORAL_PURPOSE_WORKFLOW)) {
+            return;
+        }
+
+        try {
+            Background.deleteTemporalEvent();
+        } catch (ex) {
+        }
+
+        clearTemporalEventPurpose();
+        try {
+            Storage.deleteValue(CalendarWakeConfig.STORAGE_WORKFLOW_TRIGGER_EPOCH);
+        } catch (ex) {
+        }
+    }
+
+    function getTemporalEventPurpose() {
+        try {
+            var purpose = Storage.getValue(CalendarWakeConfig.STORAGE_TEMPORAL_EVENT_PURPOSE);
+            return purpose == null ? null : purpose.toString();
+        } catch (ex) {
+            return null;
+        }
+    }
+
+    function setTemporalEventPurpose(purpose) {
+        try {
+            Storage.setValue(CalendarWakeConfig.STORAGE_TEMPORAL_EVENT_PURPOSE, purpose);
+        } catch (ex) {
+        }
+    }
+
+    function clearTemporalEventPurpose() {
+        try {
+            Storage.deleteValue(CalendarWakeConfig.STORAGE_TEMPORAL_EVENT_PURPOSE);
+        } catch (ex) {
+        }
+    }
+
+    function isManualWorkflowTimeValid() {
+        return parseClockTime(CalendarWakeConfig.getManualWorkflowTime()) != null;
+    }
+
+    function isManualWorkflowTemporalEvent() {
+        var purpose = getTemporalEventPurpose();
+        return purpose != null && purpose.equals(CalendarWakeConfig.TEMPORAL_PURPOSE_WORKFLOW);
+    }
+
+    function getManualWorkflowTimeDisplay() {
+        var parts = parseClockTime(CalendarWakeConfig.getManualWorkflowTime());
+        return parts == null ? null : formatClockTime(parts);
+    }
+
+    function parseClockTime(value) {
+        if (value == null || value.equals("")) {
+            return null;
+        }
+
+        var colonOffset = value.find(":");
+        if (colonOffset == null || colonOffset == 0 || colonOffset >= value.length() - 1) {
+            return null;
+        }
+
+        var hourText = value.substring(0, colonOffset);
+        var minuteText = value.substring(colonOffset + 1, null);
+
+        if (hourText == null
+            || minuteText == null
+            || hourText.length() > 2
+            || minuteText.length() != 2
+            || !isDigitsOnly(hourText)
+            || !isDigitsOnly(minuteText)) {
+            return null;
+        }
+
+        var hour = hourText.toNumber();
+        var minute = minuteText.toNumber();
+
+        if (hour == null || minute == null || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+            return null;
+        }
+
+        return [hour, minute];
+    }
+
+    function isDigitsOnly(value) {
+        if (value == null || value.equals("")) {
+            return false;
+        }
+
+        for (var index = 0; index < value.length(); index++) {
+            var character = value.substring(index, index + 1);
+            if (character == null || "0123456789".find(character) == null) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function calculateNextManualWorkflowEpoch(manualParts) {
+        var typedParts = manualParts as Lang.Array<Lang.Number>;
+        var hour = typedParts[0];
+        var minute = typedParts[1];
+        var triggerEpoch = Time.today().value() + (hour * 3600) + (minute * 60);
+        var nowEpoch = Time.now().value();
+
+        if (triggerEpoch <= nowEpoch + MIN_TEMPORAL_DELAY_SECONDS) {
+            triggerEpoch += Gregorian.SECONDS_PER_DAY;
+        }
+
+        return triggerEpoch;
+    }
+
+    function formatClockTime(parts) {
+        var typedParts = parts as Lang.Array<Lang.Number>;
+        return typedParts[0].format("%02d") + ":" + typedParts[1].format("%02d");
     }
 
     function storeStatus(message) {
@@ -99,7 +284,11 @@ module CalendarWakeScheduler {
 
     function scheduleAlert(eventTitle, eventStartEpoch, eventStartLocal) {
         var alertEpoch = calculateAlertEpoch(eventStartEpoch);
-        var scheduled = registerTemporalEvent(alertEpoch);
+        var scheduled = registerTemporalEvent(
+            alertEpoch,
+            "Alert time is too soon or has passed",
+            "Could not schedule wake alert"
+        );
 
         if (scheduled) {
             try {
@@ -108,6 +297,7 @@ module CalendarWakeScheduler {
                 Storage.setValue(CalendarWakeConfig.STORAGE_LAST_ALERT_EPOCH, alertEpoch);
             } catch (ex) {
             }
+            setTemporalEventPurpose(CalendarWakeConfig.TEMPORAL_PURPOSE_ALERT);
             storeStatus("Wake alert scheduled");
         }
 
@@ -177,17 +367,37 @@ module CalendarWakeScheduler {
 
     function scheduleSnooze() {
         var snoozeEpoch = Time.now().value() + (CalendarWakeConfig.getSnoozeMinutes() * 60);
-        var scheduled = registerTemporalEvent(snoozeEpoch);
+        var scheduled = registerTemporalEvent(
+            snoozeEpoch,
+            "Snooze time is too soon",
+            "Could not schedule snooze"
+        );
         if (scheduled) {
+            setTemporalEventPurpose(CalendarWakeConfig.TEMPORAL_PURPOSE_ALERT);
             storeStatus("Snoozed wake alert");
         }
         return scheduled;
     }
 
-    function registerTemporalEvent(epochSeconds) {
+    function deletePendingAlert() {
+        var currentPurpose = getTemporalEventPurpose();
+        if (currentPurpose == null
+            || !currentPurpose.equals(CalendarWakeConfig.TEMPORAL_PURPOSE_ALERT)) {
+            return;
+        }
+
+        try {
+            Background.deleteTemporalEvent();
+        } catch (ex) {
+        }
+
+        clearTemporalEventPurpose();
+    }
+
+    function registerTemporalEvent(epochSeconds, tooSoonStatus, failureStatus) {
         var nowEpoch = Time.now().value();
         if (epochSeconds <= nowEpoch + MIN_TEMPORAL_DELAY_SECONDS) {
-            storeStatus("Alert time is too soon or has passed");
+            storeStatus(tooSoonStatus);
             return false;
         }
 
@@ -195,7 +405,7 @@ module CalendarWakeScheduler {
             Background.registerForTemporalEvent(new Time.Moment(epochSeconds));
             return true;
         } catch (ex) {
-            storeStatus("Could not schedule wake alert");
+            storeStatus(failureStatus);
             return false;
         }
     }

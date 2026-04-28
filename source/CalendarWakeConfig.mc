@@ -6,6 +6,7 @@ module CalendarWakeConfig {
     const PROP_ENDPOINT_TOKEN = "endpointToken";
     const PROP_NOTIFICATION_BODY = "notificationBody";
     const PROP_TIME_ZONE = "timeZone";
+    const PROP_MANUAL_WORKFLOW_TIME = "manualWorkflowTime";
     const PROP_SUNRISE_ENABLED = "sunriseEnabled";
     const PROP_SUNRISE_LATITUDE = "sunriseLatitude";
     const PROP_SUNRISE_LONGITUDE = "sunriseLongitude";
@@ -47,6 +48,11 @@ module CalendarWakeConfig {
     const STORAGE_LAST_EVENT_TITLE = "lastEventTitle";
     const STORAGE_LAST_EVENT_START = "lastEventStart";
     const STORAGE_LAST_ALERT_EPOCH = "lastAlertEpoch";
+    const STORAGE_WORKFLOW_TRIGGER_EPOCH = "workflowTriggerEpoch";
+    const STORAGE_TEMPORAL_EVENT_PURPOSE = "temporalEventPurpose";
+
+    const TEMPORAL_PURPOSE_ALERT = "alert";
+    const TEMPORAL_PURPOSE_WORKFLOW = "workflow";
 
     function getBoolean(key, defaultValue) {
         try {
@@ -93,6 +99,10 @@ module CalendarWakeConfig {
 
     function getTimeZone() {
         return getString(PROP_TIME_ZONE, "");
+    }
+
+    function getManualWorkflowTime() {
+        return getString(PROP_MANUAL_WORKFLOW_TIME, "");
     }
 
     function isSunriseEnabled() {

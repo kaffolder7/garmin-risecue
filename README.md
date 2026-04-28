@@ -1,10 +1,12 @@
 # RiseCue
 
-Connect IQ watch app for Garmin watches. The app registers for the watch's configured Sleep Time, asks a small calendar endpoint for tomorrow morning's first event, optionally calculates tomorrow's sunrise on the watch, and schedules a watch notification alert for `target time - lead minutes - buffer minutes`.
+Connect IQ watch app for Garmin watches. The app registers for the watch's configured Sleep Time, or an optional manual workflow time, asks a small calendar endpoint for tomorrow morning's first event, optionally calculates tomorrow's sunrise on the watch, and schedules a watch notification alert for `target time - lead minutes - buffer minutes`.
 
 Important limitation: this does not create or modify Garmin's built-in alarms. Connect IQ exposes background triggers and notifications, but not native alarm creation.
 
 When calendar and sunrise alerts are both enabled, RiseCue schedules a single alert for whichever target comes first.
+
+By default, the calendar/sunrise workflow runs when the watch reaches its configured Sleep Time. Setting `Manual workflow time` overrides that Sleep Time trigger and runs the workflow daily at the specified watch-local time instead.
 
 ## Project Pieces
 
@@ -202,6 +204,7 @@ Configure these in Garmin Connect / Connect IQ:
 - Enable wake alerts
 - Calendar endpoint URL
 - Time zone
+- Manual workflow time, optional `HH:MM` 24-hour watch-local time such as `21:30`; leave blank to use the watch's Sleep Time trigger
 - Enable sunrise alerts, default `false`
 - Sunrise latitude, as decimal degrees such as `39.7684`
 - Sunrise longitude, as decimal degrees such as `-86.1581`
@@ -223,6 +226,13 @@ Notification body templates support:
 - `{eventStartLocal}` which renders as a human-readable local time, such as `Tue, Apr 28 at 8:00 AM EDT`
 
 For sunrise alerts, `{eventTitle}` renders as `Sunrise` and `{eventStartLocal}` renders as the calculated sunrise time.
+
+Manual workflow time notes:
+
+- Leave the field blank to keep the default Sleep Time behavior.
+- Enter a valid `HH:MM` 24-hour time to run the calendar/sunrise check at that watch-local time every day. When set, RiseCue unregisters the Sleep Time trigger so the workflow does not also run at bedtime.
+- Connect IQ supports only one temporal background event at a time. RiseCue uses that slot for the manual workflow trigger until the workflow schedules a wake alert; the alert then owns the slot until it fires, after which RiseCue schedules the next manual workflow trigger.
+- Invalid values, such as `25:00` or `9pm`, are ignored and RiseCue falls back to the Sleep Time trigger.
 
 Tone and vibration notes:
 

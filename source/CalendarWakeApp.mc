@@ -10,12 +10,12 @@ class CalendarWakeApp extends Application.AppBase {
     }
 
     function onStart(state) {
-        CalendarWakeScheduler.registerSleepEvent();
+        CalendarWakeScheduler.registerWorkflowTriggers();
         registerNotificationMessages();
     }
 
     function onSettingsChanged() {
-        CalendarWakeScheduler.registerSleepEvent();
+        CalendarWakeScheduler.registerWorkflowTriggers();
         WatchUi.requestUpdate();
     }
 
@@ -38,10 +38,8 @@ class CalendarWakeApp extends Application.AppBase {
                     CalendarWakeScheduler.showStatusNotification("Snoozed", "Wake alert moved by " + CalendarWakeConfig.getSnoozeMinutes() + " minutes.");
                 }
             } else if (message.action == CalendarWakeConfig.ACTION_DISMISS) {
-                try {
-                    Background.deleteTemporalEvent();
-                } catch (ex) {
-                }
+                CalendarWakeScheduler.deletePendingAlert();
+                CalendarWakeScheduler.registerWorkflowTriggers();
                 CalendarWakeScheduler.storeStatus("Wake alert dismissed");
             }
         }

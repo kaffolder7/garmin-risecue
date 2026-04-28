@@ -15,6 +15,9 @@
         <setting propertyKey="@Properties.timeZone" title="@Strings.SettingTimeZoneTitle">
             <settingConfig type="alphaNumeric" required="false" />
         </setting>
+        <setting propertyKey="@Properties.manualWorkflowTime" title="@Strings.SettingManualWorkflowTimeTitle">
+            <settingConfig type="alphaNumeric" required="false" />
+        </setting>
         <setting propertyKey="@Properties.sunriseEnabled" title="@Strings.SettingSunriseEnabledTitle">
             <settingConfig type="boolean" />
         </setting>

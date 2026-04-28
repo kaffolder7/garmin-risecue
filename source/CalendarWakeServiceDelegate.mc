@@ -16,7 +16,31 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
     }
 
     function onSleepTime() {
-        CalendarWakeScheduler.registerSleepEvent();
+        CalendarWakeScheduler.registerWorkflowTriggers();
+        if (CalendarWakeScheduler.isManualWorkflowTimeValid()) {
+            CalendarWakeScheduler.storeStatus("Sleep Time skipped; manual workflow time is set");
+            Background.exit({ "status" => "manual_override" });
+            return;
+        }
+
+        runWakeWorkflow();
+    }
+
+    function onTemporalEvent() {
+        if (CalendarWakeScheduler.isManualWorkflowTemporalEvent()) {
+            CalendarWakeScheduler.clearTemporalEventPurpose();
+            runWakeWorkflow();
+            return;
+        }
+
+        CalendarWakeScheduler.clearTemporalEventPurpose();
+        CalendarWakeScheduler.registerWorkflowTriggers();
+        CalendarWakeScheduler.showWakeNotification();
+        Background.exit({ "status" => "alert_fired" });
+    }
+
+    function runWakeWorkflow() {
+        CalendarWakeScheduler.registerWorkflowTriggers();
 
         if (!CalendarWakeConfig.isEnabled()) {
             CalendarWakeScheduler.storeStatus("Wake alerts disabled");
@@ -63,11 +87,6 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
         } catch (ex) {
             finishWithTarget(null, "Calendar request failed", "request_start_failed", true);
         }
-    }
-
-    function onTemporalEvent() {
-        CalendarWakeScheduler.showWakeNotification();
-        Background.exit({ "status" => "alert_fired" });
     }
 
     function onCalendarResponse(responseCode as Lang.Number, data as Lang.Dictionary or Lang.String or PersistedContent.Iterator or Null) as Void {

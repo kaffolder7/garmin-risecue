@@ -6,9 +6,8 @@ class CalendarWakeDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onSelect() {
-        CalendarWakeScheduler.registerSleepEvent();
+        CalendarWakeScheduler.registerWorkflowTriggers();
         WatchUi.requestUpdate();
         return true;
     }
 }
-
