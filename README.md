@@ -57,9 +57,13 @@ Endpoint response without an event:
 { "hasEvent": false }
 ```
 
-### Endpoint on Coolify
+### Endpoint Deployment
 
-Push this repo to GitHub, Gitea, or another Git host Coolify can read. In Coolify:
+The watch app needs a hosted calendar endpoint that it can reach over HTTPS. Any Node/Docker-capable host should work; Coolify is one possible option.
+
+Coolify example:
+
+Push this repo to GitHub, Gitea, or another Git host Coolify can read, then in Coolify:
 
 1. Create a new Application resource.
 2. Select the repo.
