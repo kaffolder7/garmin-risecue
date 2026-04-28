@@ -492,10 +492,14 @@ module RiseCueScheduler {
             return;
         }
 
-        runVibrationPattern();
-
-        if (mode == RiseCueConfig.ALERT_MODE_TONE_VIBRATE) {
+        if (mode == RiseCueConfig.ALERT_MODE_TONE_ONLY) {
             runTonePattern();
+        } else {
+            runVibrationPattern();
+
+            if (mode == RiseCueConfig.ALERT_MODE_TONE_VIBRATE) {
+                runTonePattern();
+            }
         }
     }
 

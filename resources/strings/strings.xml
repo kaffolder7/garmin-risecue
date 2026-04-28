@@ -25,6 +25,7 @@
         <string id="SettingCustomVibrationPatternTitle">Custom vibration pattern</string>
         <string id="AlertModeVibrate">Vibrate</string>
         <string id="AlertModeToneVibrate">Tone and vibrate</string>
+        <string id="AlertModeToneOnly">Tone only</string>
         <string id="AlertModeNotificationOnly">Notification only</string>
         <string id="ToneStyleAlarm">Alarm</string>
         <string id="ToneStyleLoudBeep">Loud beep</string>

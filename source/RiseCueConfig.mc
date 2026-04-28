@@ -25,6 +25,7 @@ module RiseCueConfig {
     const ALERT_MODE_VIBRATE = 0;
     const ALERT_MODE_TONE_VIBRATE = 1;
     const ALERT_MODE_NOTIFICATION_ONLY = 2;
+    const ALERT_MODE_TONE_ONLY = 3;
 
     const TONE_STYLE_ALARM = 0;
     const TONE_STYLE_LOUD_BEEP = 1;

@@ -46,6 +46,7 @@
             <settingConfig type="list" required="true">
                 <listEntry value="0">@Strings.AlertModeVibrate</listEntry>
                 <listEntry value="1">@Strings.AlertModeToneVibrate</listEntry>
+                <listEntry value="3">@Strings.AlertModeToneOnly</listEntry>
                 <listEntry value="2">@Strings.AlertModeNotificationOnly</listEntry>
             </settingConfig>
         </setting>
