@@ -9,6 +9,8 @@ const DEFAULT_PORT = 8787;
 const DEFAULT_WINDOW_START = '04:00';
 const DEFAULT_WINDOW_END = '12:00';
 const DEFAULT_TIME_ZONE = 'America/New_York';
+const DEFAULT_PRIVACY_EFFECTIVE_DATE = 'April 28, 2026';
+const DEFAULT_PRIVACY_APP_NAME = 'RiseCue';
 export const REQUEST_CALENDAR_URL_HEADER = 'x-risecue-calendar-url';
 
 class CalendarUrlError extends Error {
@@ -371,6 +373,128 @@ export function nextMorningEventFromIcsText({ icsText, now = new Date(), timeZon
   return responseForOccurrences(occurrences, window.timeZone, 'test-ics');
 }
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[character]));
+}
+
+function renderContactHtml(appName, contactEmail) {
+  if (!contactEmail) {
+    return `Use the contact method listed on the ${appName} Garmin Connect IQ Store listing.`;
+  }
+
+  const safeEmail = escapeHtml(contactEmail);
+  return `Email: <a href="mailto:${encodeURIComponent(contactEmail)}">${safeEmail}</a>`;
+}
+
+export function renderPrivacyPolicyHtml({
+  appName = process.env.PRIVACY_APP_NAME || DEFAULT_PRIVACY_APP_NAME,
+  contactEmail = process.env.PRIVACY_CONTACT_EMAIL || '',
+  effectiveDate = process.env.PRIVACY_EFFECTIVE_DATE || DEFAULT_PRIVACY_EFFECTIVE_DATE
+} = {}) {
+  const safeAppName = escapeHtml(appName);
+  const safeEffectiveDate = escapeHtml(effectiveDate);
+  const contactHtml = renderContactHtml(safeAppName, contactEmail);
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${safeAppName} Privacy Policy</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    body {
+      margin: 0;
+      background: Canvas;
+      color: CanvasText;
+    }
+
+    main {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 48px 20px 72px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.1;
+    }
+
+    h2 {
+      margin: 32px 0 8px;
+      font-size: 1.25rem;
+    }
+
+    p,
+    li {
+      font-size: 1rem;
+    }
+
+    .muted {
+      color: color-mix(in srgb, CanvasText 70%, Canvas);
+    }
+
+    a {
+      color: LinkText;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>${safeAppName} Privacy Policy</h1>
+    <p class="muted">Effective date: ${safeEffectiveDate}</p>
+
+    <p>${safeAppName} is a Garmin Connect IQ app that helps schedule a wake notification based on your next morning calendar event and, if enabled, sunrise. This policy explains what data is processed by the app and by the calendar endpoint used with it.</p>
+
+    <h2>Data processed by the watch app</h2>
+    <p>The app stores the settings you configure on your Garmin device or through Garmin Connect, such as the calendar endpoint URL, optional endpoint token, time zone, morning window, notification text, lead and buffer minutes, snooze length, and alert preferences. If you enable sunrise alerts, the app also stores the latitude and longitude you enter for sunrise calculation.</p>
+    <p>When a wake notification is scheduled, the app may temporarily store the selected event title and start time on the watch so it can show the notification later.</p>
+
+    <h2>Data processed by the calendar endpoint</h2>
+    <p>The calendar endpoint fetches the configured ICS calendar feed and looks for the first timed event in the configured morning window. Calendar event titles, start times, end times, recurrence details, and the calendar feed response pass through the endpoint while the request is processed. The endpoint returns only the event status, event title, and event start time needed by the watch app.</p>
+    <p>Requests to the endpoint may also include technical metadata such as IP address, user agent, request path, query parameters for the morning window or time zone, and an endpoint token if you provide one. The default, public endpoint may keep access logs containing some of that metadata.</p>
+
+    <h2>How data is used</h2>
+    <p>Data is used to find the next morning calendar event, schedule or display a wake notification, troubleshoot the service, secure the endpoint, and maintain the app. It is not used for advertising, profiling, or sale to third parties.</p>
+
+    <h2>Retention</h2>
+    <p>The included endpoint code processes calendar data in memory and does not intentionally store calendar contents, event titles, or event times after the request completes. Operational logs kept by a hosting provider, reverse proxy, or deployment platform may be retained according to that service's settings. On the watch, the last scheduled event title and time may remain in local app storage until replaced, cleared, or the app is removed.</p>
+
+    <h2>Sharing</h2>
+    <p>Calendar data may be processed by the server or hosting provider that runs the endpoint and by your calendar provider when the endpoint fetches the ICS feed. Data may also be disclosed if required by law or to protect the app, server, users, or others.</p>
+    <p>Data submitted to ${safeAppName} or its endpoint is submitted to the app developer or endpoint operator, not to Garmin. Garmin is not responsible for that data.</p>
+
+    <h2>Location data</h2>
+    <p>${safeAppName} does not collect location data by default. If you enable sunrise alerts, the latitude and longitude you enter are used on the watch for sunrise calculation and are not sent to the included calendar endpoint.</p>
+
+    <h2>Your choices</h2>
+    <p>You can stop endpoint processing by disabling calendar wake alerts, removing the calendar endpoint URL or token from app settings, or uninstalling the app. You can disable sunrise alerts or remove sunrise coordinates in app settings. You may use the contact method below to request deletion of user data under the developer's control. If you self-host the endpoint, you control its calendar feed configuration and any server logs created by your hosting setup.</p>
+
+    <h2>Security</h2>
+    <p>Use HTTPS for the endpoint, keep the endpoint token private, and protect the private calendar feed URL. No internet-connected service can be guaranteed completely secure.</p>
+
+    <h2>Changes</h2>
+    <p>This policy may be updated when the app or endpoint changes how data is collected, used, stored, or disclosed. Keep the same privacy policy URL active, or redirect it to the new location.</p>
+
+    <h2>Contact</h2>
+    <p>${contactHtml}</p>
+  </main>
+</body>
+</html>`;
+}
+
 function jsonResponse(res, statusCode, payload) {
   const body = JSON.stringify(payload);
   res.writeHead(statusCode, {
@@ -380,12 +504,21 @@ function jsonResponse(res, statusCode, payload) {
   res.end(body);
 }
 
+function htmlResponse(res, statusCode, body) {
+  res.writeHead(statusCode, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'public, max-age=3600'
+  });
+  res.end(body);
+}
+
 export function createServer({
   icsUrl = process.env.CALENDAR_ICS_URL,
   defaultTimeZone = process.env.CALENDAR_TIME_ZONE || DEFAULT_TIME_ZONE,
   endpointToken = process.env.ENDPOINT_TOKEN || '',
   allowRequestCalendarUrl = process.env.ALLOW_REQUEST_CALENDAR_URL,
-  nextMorningEventHandler = nextMorningEvent
+  nextMorningEventHandler = nextMorningEvent,
+  privacyPolicyOptions
 } = {}) {
   const requestCalendarUrlsAllowed = parseBooleanFlag(allowRequestCalendarUrl);
 
@@ -394,6 +527,11 @@ export function createServer({
 
     if (requestUrl.pathname === '/health') {
       jsonResponse(res, 200, { ok: true });
+      return;
+    }
+
+    if (requestUrl.pathname === '/privacy' || requestUrl.pathname === '/privacy/') {
+      htmlResponse(res, 200, renderPrivacyPolicyHtml(privacyPolicyOptions));
       return;
     }
 

@@ -39,10 +39,18 @@ To let callers provide their own private ICS URL in the `X-RiseCue-Calendar-Url`
 HTTPS header, set `ALLOW_REQUEST_CALENDAR_URL=true`. Request-supplied calendar
 URLs must be HTTPS and are not accepted through query string parameters.
 
+The same server also exposes a public privacy policy at:
+
+```text
+https://public-host.example.com/privacy
+```
+
+Set `PRIVACY_CONTACT_EMAIL` and optionally `PRIVACY_EFFECTIVE_DATE` before publishing so the policy has current contact details. The `/privacy` page is intentionally not protected by `ENDPOINT_TOKEN`.
+
 Watch setting value example:
 
 ```text
-https://your-public-host.example.com/next-morning-event
+https://public-host.example.com/next-morning-event
 ```
 
 Endpoint response with an event:
@@ -80,10 +88,12 @@ Push this repo to GitHub, Gitea, or another Git host Coolify can read, then in C
 6. Add runtime environment variables:
 
 ```env
-CALENDAR_ICS_URL=https://calendar.google.com/calendar/ical/your-private-calendar/basic.ics
+CALENDAR_ICS_URL=https://calendar.google.com/calendar/ical/private-calendar/basic.ics
 CALENDAR_TIME_ZONE=America/New_York
 ENDPOINT_TOKEN=use-a-long-random-secret
 ALLOW_REQUEST_CALENDAR_URL=false
+PRIVACY_CONTACT_EMAIL=privacy@example.com
+PRIVACY_EFFECTIVE_DATE="April 28, 2026"
 PORT=8787
 HOST=0.0.0.0
 ```
@@ -95,9 +105,10 @@ as a fallback calendar for requests that do not include the header.
 After deployment, test the endpoint:
 
 ```sh
-curl https://garmin-risecue.yourdomain.com/health
+curl https://garmin-risecue.example.com/health
+curl https://garmin-risecue.example.com/privacy
 curl -H "X-RiseCue-Token: use-a-long-random-secret" \
-  "https://garmin-risecue.yourdomain.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
+  "https://garmin-risecue.example.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
 # When ALLOW_REQUEST_CALENDAR_URL=true:
 curl -H "X-RiseCue-Token: use-a-long-random-secret" \
   -H "X-RiseCue-Calendar-Url: https://calendar.google.com/calendar/ical/your-private-calendar/basic.ics" \
@@ -107,7 +118,7 @@ curl -H "X-RiseCue-Token: use-a-long-random-secret" \
 Use these Garmin app setting values:
 
 ```text
-Calendar endpoint URL: https://garmin-risecue.yourdomain.com/next-morning-event
+Calendar endpoint URL: https://garmin-risecue.example.com/next-morning-event
 Calendar ICS URL: leave blank when the endpoint uses CALENDAR_ICS_URL, or set your private HTTPS .ics URL when the endpoint allows request calendar URLs
 Calendar endpoint token: use-a-long-random-secret
 Calendar time zone: choose Endpoint default, UTC, or a common IANA zone such as America/New_York
@@ -219,7 +230,7 @@ For the listing, be explicit:
 - It requires the Background, Communications, and Notifications permissions.
 - It requires a hosted calendar endpoint.
 - Calendar data is processed by either a free, public (and private) endpoint or you may self-host your own calendar event-processing endpoint.
-- Include the privacy policy URL (e.g. `https://garmin-risecue.yourdomain.com/privacy`), since private ICS URLs, event titles, and event times may pass through a public server endpoint.
+- Include the privacy policy URL (e.g. `https://garmin-risecue.example.com/privacy`), since private ICS URLs, event titles, and event times may pass through a public server endpoint.
 
 ## App Settings
 
