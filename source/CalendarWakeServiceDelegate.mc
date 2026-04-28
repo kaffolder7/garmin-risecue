@@ -36,9 +36,12 @@ class CalendarWakeServiceDelegate extends System.ServiceDelegate {
 
         var params = {
             "windowStart" => CalendarWakeConfig.getMorningStart(),
-            "windowEnd" => CalendarWakeConfig.getMorningEnd(),
-            "timeZone" => CalendarWakeConfig.getTimeZone()
+            "windowEnd" => CalendarWakeConfig.getMorningEnd()
         };
+        var timeZone = CalendarWakeConfig.getTimeZone();
+        if (timeZone != null && !timeZone.equals("")) {
+            params["timeZone"] = timeZone;
+        }
 
         var headers = {
             "Accept" => "application/json"

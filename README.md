@@ -26,7 +26,7 @@ Run locally:
 
 ```sh
 CALENDAR_ICS_URL="https://calendar.google.com/calendar/ical/..." \
-CALENDAR_TIME_ZONE="America/Indiana/Indianapolis" \
+CALENDAR_TIME_ZONE="America/New_York" \
 npm start
 ```
 
@@ -74,7 +74,7 @@ Push this repo to GitHub, Gitea, or another Git host Coolify can read, then in C
 
 ```env
 CALENDAR_ICS_URL=https://calendar.google.com/calendar/ical/your-private-calendar/basic.ics
-CALENDAR_TIME_ZONE=America/Indiana/Indianapolis
+CALENDAR_TIME_ZONE=America/New_York
 ENDPOINT_TOKEN=use-a-long-random-secret
 PORT=8787
 HOST=0.0.0.0
@@ -85,7 +85,7 @@ After deployment, test the endpoint:
 ```sh
 curl https://calendar-wake.yourdomain.com/health
 curl -H "X-Calendar-Wake-Token: use-a-long-random-secret" \
-  "https://calendar-wake.yourdomain.com/next-morning-event?timeZone=America/Indiana/Indianapolis&windowStart=04:00&windowEnd=12:00"
+  "https://calendar-wake.yourdomain.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
 ```
 
 Use these Garmin app setting values:
@@ -93,6 +93,7 @@ Use these Garmin app setting values:
 ```text
 Calendar endpoint URL: https://calendar-wake.yourdomain.com/next-morning-event
 Calendar endpoint token: use-a-long-random-secret
+Calendar time zone: leave blank to use the endpoint default, or set an IANA zone such as America/New_York
 ```
 
 ## Watch Build

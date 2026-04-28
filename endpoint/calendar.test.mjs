@@ -35,10 +35,18 @@ test('tomorrowWindow creates the configured morning window in the target time zo
   assert.equal(window.end.toISOString(), '2026-04-28T12:00:00.000Z');
 });
 
-test('formatLocalDisplay renders a human time in America/Indiana/Indianapolis', () => {
+test('tomorrowWindow defaults to the endpoint time zone', () => {
+  const window = tomorrowWindow(new Date('2026-04-27T22:00:00Z'));
+
+  assert.equal(window.timeZone, 'America/New_York');
+  assert.equal(window.start.toISOString(), '2026-04-28T08:00:00.000Z');
+  assert.equal(window.end.toISOString(), '2026-04-28T16:00:00.000Z');
+});
+
+test('formatLocalDisplay renders a human time in America/New_York', () => {
   const display = formatLocalDisplay(
     new Date('2026-04-28T12:00:00Z'),
-    'America/Indiana/Indianapolis'
+    'America/New_York'
   );
 
   assert.equal(display, 'Tue, Apr 28 at 8:00 AM EDT');

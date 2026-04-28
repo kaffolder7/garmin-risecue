@@ -92,7 +92,7 @@ module CalendarWakeConfig {
     }
 
     function getTimeZone() {
-        return getString(PROP_TIME_ZONE, "America/Indiana/Indianapolis");
+        return getString(PROP_TIME_ZONE, "");
     }
 
     function isSunriseEnabled() {

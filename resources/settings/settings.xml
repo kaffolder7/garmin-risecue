@@ -13,7 +13,7 @@
             <settingConfig type="alphaNumeric" required="true" />
         </setting>
         <setting propertyKey="@Properties.timeZone" title="@Strings.SettingTimeZoneTitle">
-            <settingConfig type="alphaNumeric" required="true" />
+            <settingConfig type="alphaNumeric" required="false" />
         </setting>
         <setting propertyKey="@Properties.sunriseEnabled" title="@Strings.SettingSunriseEnabledTitle">
             <settingConfig type="boolean" />

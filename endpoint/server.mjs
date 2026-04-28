@@ -7,7 +7,7 @@ const ical = icalImport.default ?? icalImport;
 const DEFAULT_PORT = 8787;
 const DEFAULT_WINDOW_START = '04:00';
 const DEFAULT_WINDOW_END = '12:00';
-const DEFAULT_TIME_ZONE = 'America/Indiana/Indianapolis';
+const DEFAULT_TIME_ZONE = 'America/New_York';
 
 export function parseClockMinutes(value, fallback) {
   if (typeof value !== 'string') return fallback;
