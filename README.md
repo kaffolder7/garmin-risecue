@@ -111,8 +111,8 @@ curl -H "X-RiseCue-Token: use-a-long-random-secret" \
   "https://garmin-risecue.example.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
 # When ALLOW_REQUEST_CALENDAR_URL=true:
 curl -H "X-RiseCue-Token: use-a-long-random-secret" \
-  -H "X-RiseCue-Calendar-Url: https://calendar.google.com/calendar/ical/your-private-calendar/basic.ics" \
-  "https://garmin-risecue.yourdomain.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
+  -H "X-RiseCue-Calendar-Url: https://calendar.google.com/calendar/ical/private-calendar/basic.ics" \
+  "https://garmin-risecue.example.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
 ```
 
 Use these Garmin app setting values:
