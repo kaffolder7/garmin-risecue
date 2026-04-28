@@ -1,4 +1,5 @@
 import http from 'node:http';
+import net from 'node:net';
 import { URL } from 'node:url';
 import icalImport from 'node-ical';
 
@@ -8,6 +9,146 @@ const DEFAULT_PORT = 8787;
 const DEFAULT_WINDOW_START = '04:00';
 const DEFAULT_WINDOW_END = '12:00';
 const DEFAULT_TIME_ZONE = 'America/New_York';
+export const REQUEST_CALENDAR_URL_HEADER = 'x-risecue-calendar-url';
+
+class CalendarUrlError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.name = 'CalendarUrlError';
+    this.code = code;
+    this.statusCode = 400;
+  }
+}
+
+export function parseBooleanFlag(value) {
+  if (value === true) return true;
+  if (typeof value !== 'string') return false;
+  return value.trim().toLowerCase() === 'true';
+}
+
+function stripIpv6Brackets(hostname) {
+  if (hostname.startsWith('[') && hostname.endsWith(']')) {
+    return hostname.slice(1, -1);
+  }
+
+  return hostname;
+}
+
+function isBlockedIpv4(hostname) {
+  const parts = hostname.split('.').map((part) => Number(part));
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+    return false;
+  }
+
+  const [first, second] = parts;
+  return first === 0 ||
+    first === 10 ||
+    first === 127 ||
+    first >= 224 ||
+    (first === 100 && second >= 64 && second <= 127) ||
+    (first === 169 && second === 254) ||
+    (first === 172 && second >= 16 && second <= 31) ||
+    (first === 192 && (second === 0 || second === 168)) ||
+    (first === 198 && (second === 18 || second === 19));
+}
+
+function mappedIpv4FromIpv6(hostname) {
+  const match = hostname.match(/^::ffff:(?:0:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i);
+  if (!match) return null;
+
+  const high = Number.parseInt(match[1], 16);
+  const low = Number.parseInt(match[2], 16);
+  return [
+    (high >> 8) & 255,
+    high & 255,
+    (low >> 8) & 255,
+    low & 255
+  ].join('.');
+}
+
+function isBlockedIpv6(hostname) {
+  const normalized = hostname.toLowerCase();
+  const mappedIpv4 = mappedIpv4FromIpv6(normalized);
+  if (mappedIpv4) {
+    return isBlockedIpv4(mappedIpv4);
+  }
+
+  return normalized === '::' ||
+    normalized === '::1' ||
+    normalized.startsWith('fc') ||
+    normalized.startsWith('fd') ||
+    normalized.startsWith('fe8') ||
+    normalized.startsWith('fe9') ||
+    normalized.startsWith('fea') ||
+    normalized.startsWith('feb');
+}
+
+export function isBlockedCalendarHostname(hostname) {
+  const normalized = stripIpv6Brackets(hostname).toLowerCase();
+  if (!normalized) return true;
+  if (normalized === 'localhost' ||
+    normalized === 'localhost.localdomain' ||
+    normalized.endsWith('.localhost') ||
+    normalized.endsWith('.localhost.localdomain') ||
+    normalized.endsWith('.local')) {
+    return true;
+  }
+
+  const ipType = net.isIP(normalized);
+  if (ipType === 4) return isBlockedIpv4(normalized);
+  if (ipType === 6) return isBlockedIpv6(normalized);
+
+  return false;
+}
+
+export function validateRequestCalendarUrl(value) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new CalendarUrlError('invalid_calendar_url', 'Calendar URL must be a non-empty HTTPS URL');
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(value.trim());
+  } catch {
+    throw new CalendarUrlError('invalid_calendar_url', 'Calendar URL must be a valid HTTPS URL');
+  }
+
+  if (parsed.protocol !== 'https:') {
+    throw new CalendarUrlError('invalid_calendar_url', 'Calendar URL must use HTTPS');
+  }
+
+  if (!parsed.hostname) {
+    throw new CalendarUrlError('invalid_calendar_url', 'Calendar URL must include a hostname');
+  }
+
+  if (parsed.username || parsed.password) {
+    throw new CalendarUrlError('invalid_calendar_url', 'Calendar URL must not include embedded credentials');
+  }
+
+  if (isBlockedCalendarHostname(parsed.hostname)) {
+    throw new CalendarUrlError('invalid_calendar_url', 'Calendar URL hostname is not allowed');
+  }
+
+  return parsed.toString();
+}
+
+function headerValue(headers, name) {
+  const value = headers[name];
+  if (Array.isArray(value)) return value[0] || '';
+  return value || '';
+}
+
+export function resolveCalendarIcsUrl({ defaultIcsUrl, requestIcsUrl, allowRequestCalendarUrl }) {
+  if (typeof requestIcsUrl !== 'string' || requestIcsUrl.trim() === '') {
+    return defaultIcsUrl;
+  }
+
+  if (!parseBooleanFlag(allowRequestCalendarUrl)) {
+    return defaultIcsUrl;
+  }
+
+  return validateRequestCalendarUrl(requestIcsUrl);
+}
 
 export function parseClockMinutes(value, fallback) {
   if (typeof value !== 'string') return fallback;
@@ -242,8 +383,12 @@ function jsonResponse(res, statusCode, payload) {
 export function createServer({
   icsUrl = process.env.CALENDAR_ICS_URL,
   defaultTimeZone = process.env.CALENDAR_TIME_ZONE || DEFAULT_TIME_ZONE,
-  endpointToken = process.env.ENDPOINT_TOKEN || ''
+  endpointToken = process.env.ENDPOINT_TOKEN || '',
+  allowRequestCalendarUrl = process.env.ALLOW_REQUEST_CALENDAR_URL,
+  nextMorningEventHandler = nextMorningEvent
 } = {}) {
+  const requestCalendarUrlsAllowed = parseBooleanFlag(allowRequestCalendarUrl);
+
   return http.createServer(async (req, res) => {
     const requestUrl = new URL(req.url, 'http://localhost');
 
@@ -263,8 +408,14 @@ export function createServer({
     }
 
     try {
-      const payload = await nextMorningEvent({
-        icsUrl,
+      const resolvedIcsUrl = resolveCalendarIcsUrl({
+        defaultIcsUrl: icsUrl,
+        requestIcsUrl: headerValue(req.headers, REQUEST_CALENDAR_URL_HEADER),
+        allowRequestCalendarUrl: requestCalendarUrlsAllowed
+      });
+
+      const payload = await nextMorningEventHandler({
+        icsUrl: resolvedIcsUrl,
         now: requestUrl.searchParams.has('now') ? new Date(requestUrl.searchParams.get('now')) : new Date(),
         timeZone: requestUrl.searchParams.get('timeZone') || defaultTimeZone,
         windowStart: requestUrl.searchParams.get('windowStart') || DEFAULT_WINDOW_START,
@@ -273,6 +424,14 @@ export function createServer({
 
       jsonResponse(res, 200, payload);
     } catch (error) {
+      if (error instanceof CalendarUrlError) {
+        jsonResponse(res, error.statusCode, {
+          error: error.code,
+          message: error.message
+        });
+        return;
+      }
+
       jsonResponse(res, 500, {
         error: 'calendar_endpoint_failed',
         message: error.message

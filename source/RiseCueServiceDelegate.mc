@@ -70,6 +70,11 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
         var headers = {
             "Accept" => "application/json"
         };
+        var calendarIcsUrl = RiseCueConfig.getCalendarIcsUrl();
+        if (calendarIcsUrl != null && !calendarIcsUrl.equals("")) {
+            headers["X-RiseCue-Calendar-Url"] = calendarIcsUrl;
+        }
+
         var endpointToken = RiseCueConfig.getEndpointToken();
         if (endpointToken != null && !endpointToken.equals("")) {
             headers["X-RiseCue-Token"] = endpointToken;
