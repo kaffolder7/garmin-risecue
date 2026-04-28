@@ -3,6 +3,7 @@ using Toybox.Application.Properties;
 module RiseCueConfig {
     const PROP_ENABLED = "enabled";
     const PROP_ENDPOINT_URL = "endpointUrl";
+    const PROP_CALENDAR_ICS_URL = "calendarIcsUrl";
     const PROP_ENDPOINT_TOKEN = "endpointToken";
     const PROP_NOTIFICATION_BODY = "notificationBody";
     const PROP_TIME_ZONE = "timeZone";
@@ -106,6 +107,10 @@ module RiseCueConfig {
 
     function getEndpointUrl() {
         return getString(PROP_ENDPOINT_URL, "");
+    }
+
+    function getCalendarIcsUrl() {
+        return getString(PROP_CALENDAR_ICS_URL, "");
     }
 
     function getEndpointToken() {

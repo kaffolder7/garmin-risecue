@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import {
   createServer,
   formatLocalDisplay,
+  parseBooleanFlag,
+  resolveCalendarIcsUrl,
   nextMorningEventFromIcsText,
   parseClockMinutes,
-  tomorrowWindow
+  REQUEST_CALENDAR_URL_HEADER,
+  tomorrowWindow,
+  validateRequestCalendarUrl
 } from './server.mjs';
 
 function calendarWith(body) {
@@ -155,4 +160,187 @@ test('endpoint token protects next-morning-event when configured', async () => {
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test('parseBooleanFlag accepts only explicit true values', () => {
+  assert.equal(parseBooleanFlag(true), true);
+  assert.equal(parseBooleanFlag('true'), true);
+  assert.equal(parseBooleanFlag(' TRUE '), true);
+  assert.equal(parseBooleanFlag(false), false);
+  assert.equal(parseBooleanFlag('false'), false);
+  assert.equal(parseBooleanFlag('1'), false);
+});
+
+test('validates request-supplied calendar URLs', () => {
+  assert.equal(
+    validateRequestCalendarUrl(' https://calendar.google.com/calendar/ical/example/basic.ics '),
+    'https://calendar.google.com/calendar/ical/example/basic.ics'
+  );
+
+  for (const value of [
+    '',
+    'not-a-url',
+    'http://calendar.example/basic.ics',
+    'https://user:pass@calendar.example/basic.ics',
+    'https://localhost/basic.ics',
+    'https://localhost.localdomain/basic.ics',
+    'https://calendar.local/basic.ics',
+    'https://127.0.0.1/basic.ics',
+    'https://10.0.0.1/basic.ics',
+    'https://172.16.0.1/basic.ics',
+    'https://192.168.1.1/basic.ics',
+    'https://169.254.1.1/basic.ics',
+    'https://[::1]/basic.ics',
+    'https://[fc00::1]/basic.ics',
+    'https://[fe80::1]/basic.ics'
+  ]) {
+    assert.throws(
+      () => validateRequestCalendarUrl(value),
+      { code: 'invalid_calendar_url' },
+      `${value} should be rejected`
+    );
+  }
+});
+
+test('resolves request calendar URL only when opt-in is enabled', () => {
+  assert.equal(
+    resolveCalendarIcsUrl({
+      defaultIcsUrl: 'https://env.example/calendar.ics',
+      requestIcsUrl: '',
+      allowRequestCalendarUrl: true
+    }),
+    'https://env.example/calendar.ics'
+  );
+
+  assert.equal(
+    resolveCalendarIcsUrl({
+      defaultIcsUrl: 'https://env.example/calendar.ics',
+      requestIcsUrl: 'https://request.example/calendar.ics',
+      allowRequestCalendarUrl: false
+    }),
+    'https://env.example/calendar.ics'
+  );
+
+  assert.equal(
+    resolveCalendarIcsUrl({
+      defaultIcsUrl: 'https://env.example/calendar.ics',
+      requestIcsUrl: 'https://request.example/calendar.ics',
+      allowRequestCalendarUrl: true
+    }),
+    'https://request.example/calendar.ics'
+  );
+});
+
+async function withTestServer(options, callback) {
+  const seenRequests = [];
+  const server = createServer({
+    ...options,
+    nextMorningEventHandler: async (request) => {
+      seenRequests.push(request);
+      return { hasEvent: false };
+    }
+  });
+
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address();
+
+  try {
+    await callback({ port, seenRequests });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
+test('endpoint falls back to configured calendar when dynamic header is absent', async () => {
+  await withTestServer({
+    icsUrl: 'https://env.example/calendar.ics',
+    allowRequestCalendarUrl: true
+  }, async ({ port, seenRequests }) => {
+    const response = await fetch(`http://127.0.0.1:${port}/next-morning-event`);
+    assert.equal(response.status, 200);
+    assert.equal(seenRequests[0].icsUrl, 'https://env.example/calendar.ics');
+  });
+});
+
+test('endpoint ignores request calendar header unless dynamic URLs are enabled', async () => {
+  await withTestServer({
+    icsUrl: 'https://env.example/calendar.ics',
+    allowRequestCalendarUrl: false
+  }, async ({ port, seenRequests }) => {
+    const response = await fetch(`http://127.0.0.1:${port}/next-morning-event`, {
+      headers: {
+        'X-RiseCue-Calendar-Url': 'https://request.example/calendar.ics'
+      }
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(seenRequests[0].icsUrl, 'https://env.example/calendar.ics');
+  });
+});
+
+test('endpoint uses request calendar header when dynamic URLs are enabled', async () => {
+  await withTestServer({
+    icsUrl: 'https://env.example/calendar.ics',
+    allowRequestCalendarUrl: true
+  }, async ({ port, seenRequests }) => {
+    const response = await fetch(`http://127.0.0.1:${port}/next-morning-event`, {
+      headers: {
+        'X-RiseCue-Calendar-Url': 'https://request.example/calendar.ics'
+      }
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(seenRequests[0].icsUrl, 'https://request.example/calendar.ics');
+  });
+});
+
+test('endpoint does not accept calendar URLs as query parameters', async () => {
+  await withTestServer({
+    icsUrl: 'https://env.example/calendar.ics',
+    allowRequestCalendarUrl: true
+  }, async ({ port, seenRequests }) => {
+    const query = new URLSearchParams({
+      calendarUrl: 'https://request.example/calendar.ics'
+    });
+    const response = await fetch(`http://127.0.0.1:${port}/next-morning-event?${query}`);
+
+    assert.equal(response.status, 200);
+    assert.equal(seenRequests[0].icsUrl, 'https://env.example/calendar.ics');
+  });
+});
+
+test('endpoint rejects invalid dynamic calendar header before fetching', async () => {
+  await withTestServer({
+    icsUrl: 'https://env.example/calendar.ics',
+    allowRequestCalendarUrl: true
+  }, async ({ port, seenRequests }) => {
+    const response = await fetch(`http://127.0.0.1:${port}/next-morning-event`, {
+      headers: {
+        'X-RiseCue-Calendar-Url': 'http://request.example/calendar.ics'
+      }
+    });
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.equal(body.error, 'invalid_calendar_url');
+    assert.equal(seenRequests.length, 0);
+  });
+});
+
+test('watch request includes configured calendar URL header only from the new setting', async () => {
+  const serviceDelegate = await readFile(new URL('../source/RiseCueServiceDelegate.mc', import.meta.url), 'utf8');
+  const config = await readFile(new URL('../source/RiseCueConfig.mc', import.meta.url), 'utf8');
+  const properties = await readFile(new URL('../resources/properties/properties.xml', import.meta.url), 'utf8');
+  const settings = await readFile(new URL('../resources/settings/settings.xml', import.meta.url), 'utf8');
+  const strings = await readFile(new URL('../resources/strings/strings.xml', import.meta.url), 'utf8');
+
+  assert.match(config, /PROP_CALENDAR_ICS_URL = "calendarIcsUrl"/);
+  assert.match(config, /function getCalendarIcsUrl\(\)/);
+  assert.match(serviceDelegate, /RiseCueConfig\.getCalendarIcsUrl\(\)/);
+  assert.match(serviceDelegate, /headers\["X-RiseCue-Calendar-Url"\] = calendarIcsUrl/);
+  assert.match(properties, /<property id="calendarIcsUrl" type="string">/);
+  assert.match(settings, /propertyKey="@Properties\.calendarIcsUrl"/);
+  assert.match(strings, /<string id="SettingCalendarIcsUrlTitle">Calendar ICS URL<\/string>/);
+  assert.equal(serviceDelegate.includes('params["calendarUrl"]'), false);
+  assert.equal(REQUEST_CALENDAR_URL_HEADER, 'x-risecue-calendar-url');
 });

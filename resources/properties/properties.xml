@@ -2,6 +2,7 @@
     <properties>
         <property id="enabled" type="boolean">true</property>
         <property id="endpointUrl" type="string"></property>
+        <property id="calendarIcsUrl" type="string"></property>
         <property id="endpointToken" type="string"></property>
         <property id="notificationBody" type="string">Upcoming: {eventTitle} at {eventStartLocal}</property>
         <property id="timeZone" type="number">0</property>

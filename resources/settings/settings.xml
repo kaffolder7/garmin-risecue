@@ -6,6 +6,9 @@
         <setting propertyKey="@Properties.endpointUrl" title="@Strings.SettingEndpointTitle">
             <settingConfig type="alphaNumeric" required="true" />
         </setting>
+        <setting propertyKey="@Properties.calendarIcsUrl" title="@Strings.SettingCalendarIcsUrlTitle">
+            <settingConfig type="alphaNumeric" required="false" />
+        </setting>
         <setting propertyKey="@Properties.endpointToken" title="@Strings.SettingEndpointTokenTitle">
             <settingConfig type="alphaNumeric" required="false" />
         </setting>

@@ -33,6 +33,10 @@ npm start
 ```
 
 The endpoint will listen on `http://localhost:8787` by default.
+By default, the endpoint reads the calendar configured in `CALENDAR_ICS_URL`.
+To let callers provide their own private ICS URL in the `X-RiseCue-Calendar-Url`
+HTTPS header, set `ALLOW_REQUEST_CALENDAR_URL=true`. Request-supplied calendar
+URLs must be HTTPS and are not accepted through query string parameters.
 
 Watch setting value example:
 
@@ -78,9 +82,14 @@ Push this repo to GitHub, Gitea, or another Git host Coolify can read, then in C
 CALENDAR_ICS_URL=https://calendar.google.com/calendar/ical/your-private-calendar/basic.ics
 CALENDAR_TIME_ZONE=America/New_York
 ENDPOINT_TOKEN=use-a-long-random-secret
+ALLOW_REQUEST_CALENDAR_URL=false
 PORT=8787
 HOST=0.0.0.0
 ```
+
+For a shared endpoint where each watch supplies its own private calendar URL,
+set `ALLOW_REQUEST_CALENDAR_URL=true`. You may omit `CALENDAR_ICS_URL`, or keep it
+as a fallback calendar for requests that do not include the header.
 
 After deployment, test the endpoint:
 
@@ -88,12 +97,17 @@ After deployment, test the endpoint:
 curl https://garmin-risecue.yourdomain.com/health
 curl -H "X-RiseCue-Token: use-a-long-random-secret" \
   "https://garmin-risecue.yourdomain.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
+# When ALLOW_REQUEST_CALENDAR_URL=true:
+curl -H "X-RiseCue-Token: use-a-long-random-secret" \
+  -H "X-RiseCue-Calendar-Url: https://calendar.google.com/calendar/ical/your-private-calendar/basic.ics" \
+  "https://garmin-risecue.yourdomain.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
 ```
 
 Use these Garmin app setting values:
 
 ```text
 Calendar endpoint URL: https://garmin-risecue.yourdomain.com/next-morning-event
+Calendar ICS URL: leave blank when the endpoint uses CALENDAR_ICS_URL, or set your private HTTPS .ics URL when the endpoint allows request calendar URLs
 Calendar endpoint token: use-a-long-random-secret
 Calendar time zone: choose Endpoint default, UTC, or a common IANA zone such as America/New_York
 ```
@@ -204,7 +218,7 @@ For the listing, be explicit:
 - It requires the Background, Communications, and Notifications permissions.
 - It requires a hosted calendar endpoint.
 - Calendar data is processed by either a free, public (and private) endpoint or you may self-host your own calendar event-processing endpoint.
-- Include the privacy policy URL (e.g. `https://garmin-risecue.yourdomain.com/privacy`, since event titles and times will pass through a public server endpoint.
+- Include the privacy policy URL (e.g. `https://garmin-risecue.yourdomain.com/privacy`), since private ICS URLs, event titles, and event times may pass through a public server endpoint.
 
 ## App Settings
 
@@ -212,6 +226,7 @@ Configure these in Garmin Connect / Connect IQ:
 
 - Enable wake alerts
 - Calendar endpoint URL
+- Calendar ICS URL, optional; set this to a private HTTPS `.ics` URL only when the hosted endpoint has `ALLOW_REQUEST_CALENDAR_URL=true`
 - Time zone
 - Manual workflow time, optional `HH:MM` 24-hour watch-local time such as `21:30`; leave blank to use the watch's Sleep Time trigger
 - Enable sunrise alerts, default `false`

@@ -3,6 +3,7 @@
         <string id="AppName">Calendar Wake</string>
         <string id="SettingEnabledTitle">Enable wake alerts</string>
         <string id="SettingEndpointTitle">Calendar endpoint URL</string>
+        <string id="SettingCalendarIcsUrlTitle">Calendar ICS URL</string>
         <string id="SettingEndpointTokenTitle">Calendar endpoint token</string>
         <string id="SettingNotificationBodyTitle">Notification body</string>
         <string id="SettingTimeZoneTitle">Calendar time zone</string>
