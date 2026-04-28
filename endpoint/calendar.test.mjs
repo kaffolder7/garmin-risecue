@@ -5,6 +5,7 @@ import {
   formatLocalDisplay,
   nextMorningEventFromIcsText,
   parseClockMinutes,
+  renderPrivacyPolicyHtml,
   tomorrowWindow
 } from './server.mjs';
 
@@ -137,10 +138,25 @@ END:VEVENT
   assert.deepEqual(result, { hasEvent: false });
 });
 
+test('privacy policy renders configured contact and Garmin disclosure', () => {
+  const html = renderPrivacyPolicyHtml({
+    appName: 'RiseCue',
+    contactEmail: 'privacy@example.com',
+    effectiveDate: '2026-04-28'
+  });
+
+  assert.match(html, /RiseCue Privacy Policy/);
+  assert.match(html, /mailto:privacy%40example.com/);
+  assert.match(html, /Data submitted to RiseCue or its endpoint is submitted to the app developer or endpoint operator, not to Garmin/);
+});
+
 test('endpoint token protects next-morning-event when configured', async () => {
   const server = createServer({
     icsUrl: 'https://example.com/calendar.ics',
-    endpointToken: 'secret'
+    endpointToken: 'secret',
+    privacyPolicyOptions: {
+      contactEmail: 'privacy@example.com'
+    }
   });
 
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -152,6 +168,11 @@ test('endpoint token protects next-morning-event when configured', async () => {
 
     const health = await fetch(`http://127.0.0.1:${port}/health`);
     assert.equal(health.status, 200);
+
+    const privacy = await fetch(`http://127.0.0.1:${port}/privacy`);
+    assert.equal(privacy.status, 200);
+    assert.match(privacy.headers.get('content-type'), /text\/html/);
+    assert.match(await privacy.text(), /RiseCue Privacy Policy/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
