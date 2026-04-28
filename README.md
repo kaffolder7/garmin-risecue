@@ -1,14 +1,18 @@
 # RiseCue
 
-Connect IQ watch app for Garmin watches. The app registers for the watch's configured Sleep Time, asks a small calendar endpoint for tomorrow morning's first event, and schedules a watch notification alert for `event start - lead minutes - buffer minutes`.
+Connect IQ watch app for Garmin watches. The app registers for the watch's configured Sleep Time, asks a small calendar endpoint for tomorrow morning's first event, optionally calculates tomorrow's sunrise on the watch, and schedules a watch notification alert for `target time - lead minutes - buffer minutes`.
 
 Important limitation: this does not create or modify Garmin's built-in alarms. Connect IQ exposes background triggers and notifications, but not native alarm creation.
+
+When calendar and sunrise alerts are both enabled, RiseCue schedules a single alert for whichever target comes first.
 
 ## Project Pieces
 
 - `source/` and `resources/`: Connect IQ watch app.
 - `endpoint/server.mjs`: small Node HTTP endpoint that reads a remote ICS calendar and returns the JSON contract the watch app expects.
 - `endpoint/*.test.mjs`: endpoint/date filtering tests.
+
+Sunrise support is calculated on the watch with Garmin's Weather sunrise API and manually configured latitude/longitude; it does not require a separate sunrise endpoint.
 
 ## Calendar Endpoint
 
@@ -102,6 +106,9 @@ Configure these in Garmin Connect / Connect IQ:
 - Enable wake alerts
 - Calendar endpoint URL
 - Time zone
+- Enable sunrise alerts, default `false`
+- Sunrise latitude, as decimal degrees such as `39.7684`
+- Sunrise longitude, as decimal degrees such as `-86.1581`
 - Lead minutes before event, default `60`
 - Extra buffer minutes, default `0`
 - Morning window start/end, default `04:00` through `12:00`
@@ -119,6 +126,8 @@ Notification body templates support:
 - `{eventTitle}`
 - `{eventStartLocal}` which renders as a human-readable local time, such as `Tue, Apr 28 at 8:00 AM EDT`
 
+For sunrise alerts, `{eventTitle}` renders as `Sunrise` and `{eventStartLocal}` renders as the calculated sunrise time.
+
 Tone and vibration notes:
 
 - Connect IQ does not support embedded `.wav` or `.mp3` notification samples for this watch app. Tone styles use Garmin's built-in tone constants or generated beep sequences.
@@ -133,4 +142,4 @@ Tone and vibration notes:
 npm test
 ```
 
-The tests cover tomorrow-window calculation, single events, all-day event ignoring, buffer math, and weekly recurrence expansion in the endpoint.
+The tests cover tomorrow-window calculation, single events, all-day event ignoring, and weekly recurrence expansion in the endpoint.

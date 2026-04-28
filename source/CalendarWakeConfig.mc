@@ -6,6 +6,9 @@ module CalendarWakeConfig {
     const PROP_ENDPOINT_TOKEN = "endpointToken";
     const PROP_NOTIFICATION_BODY = "notificationBody";
     const PROP_TIME_ZONE = "timeZone";
+    const PROP_SUNRISE_ENABLED = "sunriseEnabled";
+    const PROP_SUNRISE_LATITUDE = "sunriseLatitude";
+    const PROP_SUNRISE_LONGITUDE = "sunriseLongitude";
     const PROP_LEAD_MINUTES = "leadMinutes";
     const PROP_BUFFER_MINUTES = "bufferMinutes";
     const PROP_MORNING_START = "morningStart";
@@ -90,6 +93,69 @@ module CalendarWakeConfig {
 
     function getTimeZone() {
         return getString(PROP_TIME_ZONE, "America/Indiana/Indianapolis");
+    }
+
+    function isSunriseEnabled() {
+        return getBoolean(PROP_SUNRISE_ENABLED, false);
+    }
+
+    function getSunriseLatitude() {
+        return getCoordinate(PROP_SUNRISE_LATITUDE, -90.0, 90.0);
+    }
+
+    function getSunriseLongitude() {
+        return getCoordinate(PROP_SUNRISE_LONGITUDE, -180.0, 180.0);
+    }
+
+    function getCoordinate(key, minimum, maximum) {
+        var value = getString(key, "");
+        if (!isDecimalString(value)) {
+            return null;
+        }
+
+        var coordinate = value.toDouble();
+        if (coordinate == null || coordinate < minimum || coordinate > maximum) {
+            return null;
+        }
+
+        return coordinate;
+    }
+
+    function isDecimalString(value) {
+        if (value == null || value.equals("")) {
+            return false;
+        }
+
+        var decimalCount = 0;
+        var digitCount = 0;
+
+        for (var index = 0; index < value.length(); index++) {
+            var character = value.substring(index, index + 1);
+            if (character == null) {
+                return false;
+            }
+
+            if (character.equals("-") || character.equals("+")) {
+                if (index != 0) {
+                    return false;
+                }
+            } else if (character.equals(".")) {
+                decimalCount++;
+                if (decimalCount > 1) {
+                    return false;
+                }
+            } else if (!isDigitCharacter(character)) {
+                return false;
+            } else {
+                digitCount++;
+            }
+        }
+
+        return digitCount > 0;
+    }
+
+    function isDigitCharacter(character) {
+        return "0123456789".find(character) != null;
     }
 
     function getLeadMinutes() {

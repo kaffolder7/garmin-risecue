@@ -15,6 +15,15 @@
         <setting propertyKey="@Properties.timeZone" title="@Strings.SettingTimeZoneTitle">
             <settingConfig type="alphaNumeric" required="true" />
         </setting>
+        <setting propertyKey="@Properties.sunriseEnabled" title="@Strings.SettingSunriseEnabledTitle">
+            <settingConfig type="boolean" />
+        </setting>
+        <setting propertyKey="@Properties.sunriseLatitude" title="@Strings.SettingSunriseLatitudeTitle">
+            <settingConfig type="alphaNumeric" required="false" />
+        </setting>
+        <setting propertyKey="@Properties.sunriseLongitude" title="@Strings.SettingSunriseLongitudeTitle">
+            <settingConfig type="alphaNumeric" required="false" />
+        </setting>
         <setting propertyKey="@Properties.leadMinutes" title="@Strings.SettingLeadMinutesTitle">
             <settingConfig type="numeric" min="0" max="240" required="true" />
         </setting>

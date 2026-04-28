@@ -6,6 +6,9 @@
         <string id="SettingEndpointTokenTitle">Calendar endpoint token</string>
         <string id="SettingNotificationBodyTitle">Notification body</string>
         <string id="SettingTimeZoneTitle">Calendar time zone</string>
+        <string id="SettingSunriseEnabledTitle">Enable sunrise alerts</string>
+        <string id="SettingSunriseLatitudeTitle">Sunrise latitude</string>
+        <string id="SettingSunriseLongitudeTitle">Sunrise longitude</string>
         <string id="SettingLeadMinutesTitle">Minutes before event</string>
         <string id="SettingBufferMinutesTitle">Extra buffer minutes</string>
         <string id="SettingMorningStartTitle">Morning window start</string>

@@ -5,6 +5,9 @@
         <property id="endpointToken" type="string"></property>
         <property id="notificationBody" type="string">Upcoming: {eventTitle} at {eventStartLocal}</property>
         <property id="timeZone" type="string">America/Indiana/Indianapolis</property>
+        <property id="sunriseEnabled" type="boolean">false</property>
+        <property id="sunriseLatitude" type="string"></property>
+        <property id="sunriseLongitude" type="string"></property>
         <property id="leadMinutes" type="number">60</property>
         <property id="bufferMinutes" type="number">0</property>
         <property id="morningStart" type="string">04:00</property>
