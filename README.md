@@ -1,3 +1,4 @@
+![RiseCue App Icon](resources/drawables/launcher_icon.png)
 # RiseCue
 
 Connect IQ watch app for Garmin watches. The app registers for the watch's configured Sleep Time, or an optional manual workflow time, asks a small calendar endpoint for tomorrow morning's first event, optionally calculates tomorrow's sunrise on the watch, and schedules a watch notification alert for `target time - lead minutes - buffer minutes`.
