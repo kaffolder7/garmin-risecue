@@ -3,6 +3,7 @@ using Toybox.Application.Properties;
 module RiseCueConfig {
     const PROP_ENABLED = "enabled";
     const PROP_ENDPOINT_URL = "endpointUrl";
+    const DEFAULT_ENDPOINT_URL = "https://garmin-risecue.affolder.cloud/next-morning-event";
     const PROP_CALENDAR_ICS_URL = "calendarIcsUrl";
     const PROP_ENDPOINT_TOKEN = "endpointToken";
     const PROP_NOTIFICATION_BODY = "notificationBody";
@@ -106,7 +107,9 @@ module RiseCueConfig {
     }
 
     function getEndpointUrl() {
-        return getString(PROP_ENDPOINT_URL, "");
+        // return getString(PROP_ENDPOINT_URL, "");
+        var value = getString(PROP_ENDPOINT_URL, DEFAULT_ENDPOINT_URL);
+        return value == null || value.equals("") ? DEFAULT_ENDPOINT_URL : value;
     }
 
     function getCalendarIcsUrl() {
