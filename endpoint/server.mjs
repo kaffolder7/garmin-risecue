@@ -295,15 +295,47 @@ function eventDurationMs(event) {
   return event.end.getTime() - event.start.getTime();
 }
 
-function pushOccurrence(occurrences, event, start, end, rangeStart, rangeEnd) {
-  if (start >= rangeStart && start < rangeEnd) {
-    occurrences.push({
-      title: event.summary || 'Calendar event',
-      start,
-      end,
-      uid: event.uid
-    });
+function isValidDate(value) {
+  return value && typeof value.getTime === 'function' && Number.isFinite(value.getTime());
+}
+
+function dateInWindow(date, rangeStart, rangeEnd) {
+  return date >= rangeStart && date < rangeEnd;
+}
+
+function occurrenceTarget(start, end, rangeStart, rangeEnd) {
+  if (!isValidDate(start)) {
+    return null;
   }
+
+  if (dateInWindow(start, rangeStart, rangeEnd)) {
+    return { date: start, basis: 'start' };
+  }
+
+  if (start < rangeStart &&
+    isValidDate(end) &&
+    end > start &&
+    dateInWindow(end, rangeStart, rangeEnd)) {
+    return { date: end, basis: 'end' };
+  }
+
+  return null;
+}
+
+function pushOccurrence(occurrences, event, start, end, rangeStart, rangeEnd) {
+  const target = occurrenceTarget(start, end, rangeStart, rangeEnd);
+  if (!target) {
+    return;
+  }
+
+  occurrences.push({
+    title: event.summary || 'Calendar event',
+    start,
+    end,
+    target: target.date,
+    targetBasis: target.basis,
+    uid: event.uid
+  });
 }
 
 export function collectOccurrences(events, rangeStart, rangeEnd) {
@@ -335,7 +367,10 @@ export function collectOccurrences(events, rangeStart, rangeEnd) {
     }
   }
 
-  occurrences.sort((a, b) => a.start.getTime() - b.start.getTime());
+  occurrences.sort((a, b) =>
+    a.target.getTime() - b.target.getTime() ||
+    a.start.getTime() - b.start.getTime()
+  );
   return occurrences;
 }
 
@@ -345,14 +380,27 @@ export function responseForOccurrences(occurrences, timeZone, source = 'google-p
   }
 
   const event = occurrences[0];
-  return {
+  const target = isValidDate(event.target) ? event.target : event.start;
+  const response = {
     hasEvent: true,
     eventTitle: event.title,
     eventStartEpochSec: Math.floor(event.start.getTime() / 1000),
     eventStartLocal: formatLocalIso(event.start, timeZone),
     eventStartDisplay: formatLocalDisplay(event.start, timeZone),
+    eventTargetEpochSec: Math.floor(target.getTime() / 1000),
+    eventTargetLocal: formatLocalIso(target, timeZone),
+    eventTargetDisplay: formatLocalDisplay(target, timeZone),
+    eventTargetBasis: event.targetBasis || 'start',
     source
   };
+
+  if (isValidDate(event.end)) {
+    response.eventEndEpochSec = Math.floor(event.end.getTime() / 1000);
+    response.eventEndLocal = formatLocalIso(event.end, timeZone);
+    response.eventEndDisplay = formatLocalDisplay(event.end, timeZone);
+  }
+
+  return response;
 }
 
 export async function nextMorningEvent({ icsUrl, now = new Date(), timeZone, windowStart, windowEnd }) {

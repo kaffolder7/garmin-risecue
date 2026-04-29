@@ -1,7 +1,7 @@
 ![RiseCue App Icon](resources/drawables/launcher_icon.png)
 # RiseCue
 
-Connect IQ watch app for Garmin watches. The app registers for the watch's configured Sleep Time, or an optional manual workflow time, asks a small calendar endpoint for tomorrow morning's first event, optionally calculates tomorrow's sunrise on the watch, and schedules a watch notification alert for `target time - lead minutes - buffer minutes`.
+Connect IQ watch app for Garmin watches. The app registers for the watch's configured Sleep Time, or an optional manual workflow time, asks a small calendar endpoint for tomorrow morning's first wake target, optionally calculates tomorrow's sunrise on the watch, and schedules a watch notification alert for `target time - lead minutes - buffer minutes`.
 
 Important limitation: this does not create or modify Garmin's built-in alarms. Connect IQ exposes background triggers and notifications, but not native alarm creation.
 
@@ -38,6 +38,8 @@ By default, the endpoint reads the calendar configured in `CALENDAR_ICS_URL`.
 To let callers provide their own private ICS URL in the `X-RiseCue-Calendar-Url`
 HTTPS header, set `ALLOW_REQUEST_CALENDAR_URL=true`. Request-supplied calendar
 URLs must be HTTPS and are not accepted through query string parameters.
+Normal morning events use their start time as the wake target. Overnight events
+that start before the morning window and end inside it use their end time.
 
 The same server also exposes a public privacy policy at:
 
@@ -62,6 +64,13 @@ Endpoint response with an event:
   "eventStartEpochSec": 1777387200,
   "eventStartLocal": "2026-04-28T08:00:00",
   "eventStartDisplay": "Tue, Apr 28 at 8:00 AM EDT",
+  "eventEndEpochSec": 1777389000,
+  "eventEndLocal": "2026-04-28T08:30:00",
+  "eventEndDisplay": "Tue, Apr 28 at 8:30 AM EDT",
+  "eventTargetEpochSec": 1777387200,
+  "eventTargetLocal": "2026-04-28T08:00:00",
+  "eventTargetDisplay": "Tue, Apr 28 at 8:00 AM EDT",
+  "eventTargetBasis": "start",
   "source": "google-private-ics"
 }
 ```
@@ -259,7 +268,7 @@ Configure these in Garmin Connect / Connect IQ:
 Notification body templates support:
 
 - `{eventTitle}`
-- `{eventStartLocal}` which renders as a human-readable local time, such as `Tue, Apr 28 at 8:00 AM EDT`
+- `{eventStartLocal}` which renders as a human-readable wake target time, such as `Tue, Apr 28 at 8:00 AM EDT`
 
 For sunrise alerts, `{eventTitle}` renders as `Sunrise` and `{eventStartLocal}` renders as the calculated sunrise time.
 

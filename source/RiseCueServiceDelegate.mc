@@ -106,8 +106,12 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
             return;
         }
 
-        var eventStartEpoch = response.get("eventStartEpochSec");
-        if (eventStartEpoch == null) {
+        var eventTargetEpoch = response.get("eventTargetEpochSec");
+        if (eventTargetEpoch == null) {
+            eventTargetEpoch = response.get("eventStartEpochSec");
+        }
+
+        if (eventTargetEpoch == null) {
             finishWithTarget(null, "Calendar response missing event time", "invalid_response", true);
             return;
         }
@@ -115,6 +119,8 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
         var eventTitle = "Calendar event";
         var eventStartLocal = "";
         var responseTitle = response.get("eventTitle");
+        var responseTargetLocal = response.get("eventTargetLocal");
+        var responseTargetDisplay = response.get("eventTargetDisplay");
         var responseStartLocal = response.get("eventStartLocal");
         var responseStartDisplay = response.get("eventStartDisplay");
 
@@ -122,13 +128,17 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
             eventTitle = responseTitle.toString();
         }
 
-        if (responseStartDisplay != null) {
+        if (responseTargetDisplay != null) {
+            eventStartLocal = responseTargetDisplay.toString();
+        } else if (responseTargetLocal != null) {
+            eventStartLocal = responseTargetLocal.toString();
+        } else if (responseStartDisplay != null) {
             eventStartLocal = responseStartDisplay.toString();
         } else if (responseStartLocal != null) {
             eventStartLocal = responseStartLocal.toString();
         }
 
-        var calendarTarget = RiseCueScheduler.makeWakeTarget(eventTitle, eventStartEpoch, eventStartLocal);
+        var calendarTarget = RiseCueScheduler.makeWakeTarget(eventTitle, eventTargetEpoch, eventStartLocal);
         finishWithTarget(calendarTarget, "No wake target found", "no_target", false);
     }
 

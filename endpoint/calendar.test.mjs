@@ -9,7 +9,6 @@ import {
   nextMorningEventFromIcsText,
   parseClockMinutes,
   REQUEST_CALENDAR_URL_HEADER,
-  tomorrowWindow,
   validateRequestCalendarUrl,
   renderPrivacyPolicyHtml,
   tomorrowWindow
@@ -80,6 +79,119 @@ END:VEVENT
   assert.equal(result.eventStartEpochSec, 1777363200);
   assert.equal(result.eventStartLocal, '2026-04-28T08:00:00');
   assert.equal(result.eventStartDisplay, 'Tue, Apr 28 at 8:00 AM UTC');
+  assert.equal(result.eventEndEpochSec, Math.floor(Date.parse('2026-04-28T08:30:00Z') / 1000));
+  assert.equal(result.eventEndLocal, '2026-04-28T08:30:00');
+  assert.equal(result.eventTargetEpochSec, result.eventStartEpochSec);
+  assert.equal(result.eventTargetLocal, result.eventStartLocal);
+  assert.equal(result.eventTargetDisplay, result.eventStartDisplay);
+  assert.equal(result.eventTargetBasis, 'start');
+});
+
+test('uses the event end time for an overnight event ending in the morning window', () => {
+  const ics = calendarWith(`
+BEGIN:VEVENT
+UID:event-overnight
+SUMMARY:Night shift
+DTSTART:20260427T200000Z
+DTEND:20260428T063000Z
+END:VEVENT
+`);
+
+  const result = nextMorningEventFromIcsText({
+    icsText: ics,
+    now: new Date('2026-04-27T22:00:00Z'),
+    timeZone: 'UTC',
+    windowStart: '04:00',
+    windowEnd: '12:00'
+  });
+
+  assert.equal(result.hasEvent, true);
+  assert.equal(result.eventTitle, 'Night shift');
+  assert.equal(result.eventStartLocal, '2026-04-27T20:00:00');
+  assert.equal(result.eventEndEpochSec, Math.floor(Date.parse('2026-04-28T06:30:00Z') / 1000));
+  assert.equal(result.eventEndLocal, '2026-04-28T06:30:00');
+  assert.equal(result.eventEndDisplay, 'Tue, Apr 28 at 6:30 AM UTC');
+  assert.equal(result.eventTargetEpochSec, result.eventEndEpochSec);
+  assert.equal(result.eventTargetLocal, result.eventEndLocal);
+  assert.equal(result.eventTargetDisplay, result.eventEndDisplay);
+  assert.equal(result.eventTargetBasis, 'end');
+});
+
+test('chooses an overnight event ending before a later morning event starts', () => {
+  const ics = calendarWith(`
+BEGIN:VEVENT
+UID:event-morning
+SUMMARY:Work meeting
+DTSTART:20260428T080000Z
+DTEND:20260428T083000Z
+END:VEVENT
+BEGIN:VEVENT
+UID:event-overnight
+SUMMARY:Night shift
+DTSTART:20260427T200000Z
+DTEND:20260428T063000Z
+END:VEVENT
+`);
+
+  const result = nextMorningEventFromIcsText({
+    icsText: ics,
+    now: new Date('2026-04-27T22:00:00Z'),
+    timeZone: 'UTC',
+    windowStart: '04:00',
+    windowEnd: '12:00'
+  });
+
+  assert.equal(result.hasEvent, true);
+  assert.equal(result.eventTitle, 'Night shift');
+  assert.equal(result.eventTargetLocal, '2026-04-28T06:30:00');
+  assert.equal(result.eventTargetBasis, 'end');
+});
+
+test('expands recurring overnight events by end time in the morning window', () => {
+  const ics = calendarWith(`
+BEGIN:VEVENT
+UID:event-recurring-overnight
+SUMMARY:Recurring night shift
+DTSTART:20260420T200000Z
+DTEND:20260421T063000Z
+RRULE:FREQ=WEEKLY;COUNT=4
+END:VEVENT
+`);
+
+  const result = nextMorningEventFromIcsText({
+    icsText: ics,
+    now: new Date('2026-04-27T22:00:00Z'),
+    timeZone: 'UTC',
+    windowStart: '04:00',
+    windowEnd: '12:00'
+  });
+
+  assert.equal(result.hasEvent, true);
+  assert.equal(result.eventTitle, 'Recurring night shift');
+  assert.equal(result.eventStartLocal, '2026-04-27T20:00:00');
+  assert.equal(result.eventTargetLocal, '2026-04-28T06:30:00');
+  assert.equal(result.eventTargetBasis, 'end');
+});
+
+test('ignores overnight events ending outside the configured morning window', () => {
+  const ics = calendarWith(`
+BEGIN:VEVENT
+UID:event-too-late
+SUMMARY:Long night shift
+DTSTART:20260427T200000Z
+DTEND:20260428T120000Z
+END:VEVENT
+`);
+
+  const result = nextMorningEventFromIcsText({
+    icsText: ics,
+    now: new Date('2026-04-27T22:00:00Z'),
+    timeZone: 'UTC',
+    windowStart: '04:00',
+    windowEnd: '12:00'
+  });
+
+  assert.deepEqual(result, { hasEvent: false });
 });
 
 test('ignores all-day events', () => {
@@ -365,4 +477,14 @@ test('watch request includes configured calendar URL header only from the new se
   assert.match(strings, /<string id="SettingCalendarIcsUrlTitle">Calendar ICS URL<\/string>/);
   assert.equal(serviceDelegate.includes('params["calendarUrl"]'), false);
   assert.equal(REQUEST_CALENDAR_URL_HEADER, 'x-risecue-calendar-url');
+});
+
+test('watch response handling prefers calendar target fields with start fallback', async () => {
+  const serviceDelegate = await readFile(new URL('../source/RiseCueServiceDelegate.mc', import.meta.url), 'utf8');
+
+  assert.match(serviceDelegate, /response\.get\("eventTargetEpochSec"\)/);
+  assert.match(serviceDelegate, /eventTargetEpoch = response\.get\("eventStartEpochSec"\)/);
+  assert.match(serviceDelegate, /response\.get\("eventTargetDisplay"\)/);
+  assert.match(serviceDelegate, /response\.get\("eventTargetLocal"\)/);
+  assert.match(serviceDelegate, /RiseCueScheduler\.makeWakeTarget\(eventTitle, eventTargetEpoch, eventStartLocal\)/);
 });
