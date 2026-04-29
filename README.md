@@ -165,6 +165,37 @@ CONNECTIQ_DEVELOPER_KEY=/secure/path/developer_key.der npm run build:watch
 CONNECTIQ_DEVELOPER_KEY=/secure/path/developer_key.der npm run package:watch
 ```
 
+### GitHub Package Workflow
+
+The optional `Garmin Package` GitHub Actions workflow can build the `.iq`
+package on demand or from `v*` tags. It is intentionally separate from required
+PR CI because it needs Garmin's SDK and signing key.
+
+To enable it:
+
+1. Register a repository self-hosted macOS runner with the custom label
+   `connectiq`.
+2. Install the Garmin Connect IQ SDK and required devices on that runner through
+   Garmin SDK Manager.
+3. Add a repository variable named `CONNECTIQ_SDK_BIN` that points to the SDK
+   `bin` directory, such as:
+
+```text
+/Users/runner/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin
+```
+
+4. Add a repository secret named `GARMIN_DEVELOPER_KEY_B64`:
+
+```sh
+openssl base64 -A -in developer_key.der
+```
+
+Manual runs upload `RiseCue-manual-*.iq` and a `.sha256` checksum as workflow
+artifacts. Pushing a tag like `v0.1.0` builds `RiseCue-v0.1.0.iq`, creates or
+updates the matching GitHub Release, and uploads the `.iq` plus checksum. The
+self-hosted runner also needs the GitHub CLI (`gh`) installed for release asset
+uploads.
+
 A Garmin developer/store account is only needed when uploading to the Connect IQ Store.
 
 Build for an epix Pro Gen 2 47mm:
