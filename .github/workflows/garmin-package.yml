@@ -1,0 +1,125 @@
+name: Garmin Package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Package Connect IQ app
+    runs-on:
+      - self-hosted
+      - macOS
+      - connectiq
+
+    env:
+      CONNECTIQ_SDK_BIN: ${{ vars.CONNECTIQ_SDK_BIN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Garmin SDK
+        run: |
+          if [[ -z "${CONNECTIQ_SDK_BIN:-}" ]]; then
+            echo "Set the CONNECTIQ_SDK_BIN repository variable to the Connect IQ SDK bin directory." >&2
+            exit 1
+          fi
+
+          if [[ ! -x "$CONNECTIQ_SDK_BIN/monkeyc" ]]; then
+            echo "monkeyc not found at $CONNECTIQ_SDK_BIN/monkeyc" >&2
+            exit 1
+          fi
+
+      - name: Decode developer key
+        env:
+          GARMIN_DEVELOPER_KEY_B64: ${{ secrets.GARMIN_DEVELOPER_KEY_B64 }}
+        run: |
+          if [[ -z "${GARMIN_DEVELOPER_KEY_B64:-}" ]]; then
+            echo "Set the GARMIN_DEVELOPER_KEY_B64 repository secret." >&2
+            exit 1
+          fi
+
+          if base64 --decode </dev/null >/dev/null 2>&1; then
+            printf '%s' "$GARMIN_DEVELOPER_KEY_B64" | base64 --decode > "$RUNNER_TEMP/developer_key.der"
+          else
+            printf '%s' "$GARMIN_DEVELOPER_KEY_B64" | base64 -D > "$RUNNER_TEMP/developer_key.der"
+          fi
+
+          chmod 600 "$RUNNER_TEMP/developer_key.der"
+
+      - name: Package watch app
+        run: CONNECTIQ_DEVELOPER_KEY="$RUNNER_TEMP/developer_key.der" npm run package:watch
+
+      - name: Prepare artifacts
+        id: artifacts
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            VERSION="$GITHUB_REF_NAME"
+          else
+            SHORT_SHA="${GITHUB_SHA::7}"
+            VERSION="manual-${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+          fi
+
+          mkdir -p dist
+          IQ_FILE="dist/RiseCue-${VERSION}.iq"
+          CHECKSUM_FILE="${IQ_FILE}.sha256"
+
+          cp bin/RiseCue.iq "$IQ_FILE"
+          shasum -a 256 "$IQ_FILE" > "$CHECKSUM_FILE"
+
+          {
+            echo "version=$VERSION"
+            echo "iq_file=$IQ_FILE"
+            echo "checksum_file=$CHECKSUM_FILE"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: RiseCue-${{ steps.artifacts.outputs.version }}
+          path: |
+            ${{ steps.artifacts.outputs.iq_file }}
+            ${{ steps.artifacts.outputs.checksum_file }}
+          if-no-files-found: error
+
+      - name: Upload release assets
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "GitHub CLI (gh) must be installed on the self-hosted runner." >&2
+            exit 1
+          fi
+
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" \
+              --title "$GITHUB_REF_NAME" \
+              --generate-notes
+          fi
+
+          gh release upload "$GITHUB_REF_NAME" \
+            "${{ steps.artifacts.outputs.iq_file }}" \
+            "${{ steps.artifacts.outputs.checksum_file }}" \
+            --clobber

@@ -2,11 +2,24 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CONNECTIQ_SDK_BIN="$(find "$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks" \
-  -maxdepth 1 -type d -name 'connectiq-sdk-*' \
-  | sort -V \
-  | tail -n 1)/bin"
-SDK_BIN="${CONNECTIQ_SDK_BIN:-$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin}"
+FALLBACK_SDK_BIN="$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin"
+SDKS_DIR="$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks"
+
+find_latest_sdk_bin() {
+  if [[ ! -d "$SDKS_DIR" ]]; then
+    return 0
+  fi
+
+  if sort -V </dev/null >/dev/null 2>&1; then
+    find "$SDKS_DIR" -maxdepth 1 -type d -name 'connectiq-sdk-*' | sort -V | tail -n 1
+  else
+    find "$SDKS_DIR" -maxdepth 1 -type d -name 'connectiq-sdk-*' | sort | tail -n 1
+  fi
+}
+
+LATEST_SDK_ROOT="$(find_latest_sdk_bin)"
+LATEST_SDK_BIN="${LATEST_SDK_ROOT:+$LATEST_SDK_ROOT/bin}"
+SDK_BIN="${CONNECTIQ_SDK_BIN:-${LATEST_SDK_BIN:-$FALLBACK_SDK_BIN}}"
 JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@21}"
 KEY_PATH="${CONNECTIQ_DEVELOPER_KEY:-$ROOT_DIR/developer_key.der}"
 
