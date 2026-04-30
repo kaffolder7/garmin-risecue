@@ -82,14 +82,14 @@ class RiseCueView extends WatchUi.View {
             drawSectionLabel(dc, "TARGET", top + ((size * 60) / 100), safeWidth(size, 62));
             drawCenteredWithin(dc, eventTitle.toString(), top + ((size * 66) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
             drawCenteredWithin(dc, compactTargetDisplay(eventStart), top + ((size * 72) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_MUTED);
-            drawCenteredWithin(dc, getQueuedNote(manualConfigured), top + ((size * 82) / 100), Graphics.FONT_XTINY, safeWidth(size, 80), COLOR_MUTED);
+            drawCenteredWithin(dc, getQueuedNote(manualConfigured), top + ((size * 82) / 100), Graphics.FONT_XTINY, safeWidth(size, 66), COLOR_MUTED);
         } else if (hasPreview) {
             drawSectionLabel(dc, "PREVIEW", top + ((size * 36) / 100), safeWidth(size, 72));
             drawCenteredWithin(dc, "Would alert " + formatEpochTime(previewAlertEpoch), top + ((size * 43) / 100), Graphics.FONT_TINY, safeWidth(size, 84), COLOR_ACCENT);
             drawSectionLabel(dc, "TARGET", top + ((size * 60) / 100), safeWidth(size, 62));
             drawCenteredWithin(dc, previewTitle.toString(), top + ((size * 66) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
             drawCenteredWithin(dc, compactTargetDisplay(previewStart), top + ((size * 72) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_MUTED);
-            drawCenteredWithin(dc, getPreviewQueueNote(manualConfigured, manualDisplay), top + ((size * 82) / 100), Graphics.FONT_XTINY, safeWidth(size, 80), COLOR_MUTED);
+            drawCenteredWithin(dc, getPreviewQueueNote(manualConfigured, manualDisplay), top + ((size * 82) / 100), Graphics.FONT_XTINY, safeWidth(size, 66), COLOR_MUTED);
         } else if (isChecking) {
             drawSectionLabel(dc, "CHECKING", top + ((size * 38) / 100), safeWidth(size, 72));
             drawCenteredWithin(dc, "Calendar", top + ((size * 48) / 100), Graphics.FONT_SMALL, safeWidth(size, 76), COLOR_TEXT);
@@ -101,7 +101,9 @@ class RiseCueView extends WatchUi.View {
             drawCenteredWithin(dc, "START checks now", top + ((size * 72) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_ACCENT);
         }
 
-        drawCenteredWithin(dc, getHealthLine(workflow, sunriseStatus, leadStatus), top + ((size * 89) / 100), Graphics.FONT_XTINY, safeWidth(size, 82), COLOR_DIM);
+        if (!hasQueuedAlert && !hasPreview) {
+            drawCenteredWithin(dc, getHealthLine(sunriseStatus, leadStatus), top + ((size * 82) / 100), Graphics.FONT_XTINY, safeWidth(size, 66), COLOR_DIM);
+        }
     }
 
     function drawFrame(dc, centerX, centerY, size) {
@@ -327,8 +329,8 @@ class RiseCueView extends WatchUi.View {
         return "Will queue at Sleep Time";
     }
 
-    function getHealthLine(workflow, sunriseStatus, leadStatus) {
-        return "Trigger " + workflow + " | Sunrise " + sunriseStatus + " | Lead " + leadStatus;
+    function getHealthLine(sunriseStatus, leadStatus) {
+        return "Sun " + sunriseStatus + " | Lead " + leadStatus;
     }
 
     function formatEpochTime(epoch) {
