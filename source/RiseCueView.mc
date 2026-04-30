@@ -153,16 +153,126 @@ class RiseCueView extends WatchUi.View {
             return;
         }
 
-        drawTextWithin(
-            dc,
-            centerX,
-            top + ((size * 89) / 100),
-            Graphics.FONT_XTINY,
-            "build " + version,
-            Graphics.TEXT_JUSTIFY_CENTER,
-            safeWidth(size, 44),
-            COLOR_DIM
-        );
+        drawTinyText(dc, centerX, top + ((size * 90) / 100), version, safeWidth(size, 44), COLOR_DIM);
+    }
+
+    function drawTinyText(dc, centerX, y, text, maxWidth, color) {
+        var value = text.toString();
+        var textWidth = tinyTextWidth(value);
+        var x = centerX - (textWidth / 2);
+        var minX = centerX - (maxWidth / 2);
+        var maxX = centerX + (maxWidth / 2);
+
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+
+        for (var index = 0; index < value.length(); index++) {
+            var glyph = tinyGlyphPattern(value.substring(index, index + 1));
+            for (var columnIndex = 0; columnIndex < 3; columnIndex++) {
+                var column = (glyph >> (columnIndex * 5)) & 31;
+                for (var rowIndex = 0; rowIndex < 5; rowIndex++) {
+                    var pixelX = x + columnIndex;
+                    if (pixelX >= minX && pixelX <= maxX && (column & (1 << rowIndex)) != 0) {
+                        dc.fillRectangle(pixelX, y + rowIndex, 1, 1);
+                    }
+                }
+            }
+
+            x += 4;
+        }
+    }
+
+    function tinyTextWidth(text) {
+        if (text == null || text.length() == 0) {
+            return 0;
+        }
+
+        return (text.length() * 4) - 1;
+    }
+
+    function tinyPattern(column0, column1, column2) {
+        return column0 | (column1 << 5) | (column2 << 10);
+    }
+
+    function tinyGlyphPattern(character) {
+        if (character == null || character.equals(" ")) {
+            return tinyPattern(0, 0, 0);
+        } else if (character.equals(".") || character.equals(",")) {
+            return tinyPattern(0, 16, 0);
+        } else if (character.equals("-") || character.equals("_")) {
+            return tinyPattern(4, 4, 4);
+        } else if (character.equals("+")) {
+            return tinyPattern(4, 14, 4);
+        } else if (character.equals("0") || character.equals("O") || character.equals("o")) {
+            return tinyPattern(31, 17, 31);
+        } else if (character.equals("1")) {
+            return tinyPattern(18, 31, 16);
+        } else if (character.equals("2")) {
+            return tinyPattern(29, 21, 23);
+        } else if (character.equals("3")) {
+            return tinyPattern(21, 21, 31);
+        } else if (character.equals("4")) {
+            return tinyPattern(7, 4, 31);
+        } else if (character.equals("5") || character.equals("S") || character.equals("s")) {
+            return tinyPattern(23, 21, 29);
+        } else if (character.equals("6")) {
+            return tinyPattern(31, 21, 29);
+        } else if (character.equals("7")) {
+            return tinyPattern(1, 29, 3);
+        } else if (character.equals("8")) {
+            return tinyPattern(31, 21, 31);
+        } else if (character.equals("9")) {
+            return tinyPattern(23, 21, 31);
+        } else if (character.equals("A") || character.equals("a")) {
+            return tinyPattern(30, 5, 30);
+        } else if (character.equals("B") || character.equals("b")) {
+            return tinyPattern(31, 21, 10);
+        } else if (character.equals("C") || character.equals("c")) {
+            return tinyPattern(31, 17, 17);
+        } else if (character.equals("D") || character.equals("d")) {
+            return tinyPattern(31, 17, 14);
+        } else if (character.equals("E") || character.equals("e")) {
+            return tinyPattern(31, 21, 17);
+        } else if (character.equals("F") || character.equals("f")) {
+            return tinyPattern(31, 5, 1);
+        } else if (character.equals("G") || character.equals("g")) {
+            return tinyPattern(31, 21, 29);
+        } else if (character.equals("H") || character.equals("h")) {
+            return tinyPattern(31, 4, 31);
+        } else if (character.equals("I") || character.equals("i")) {
+            return tinyPattern(17, 31, 17);
+        } else if (character.equals("J") || character.equals("j")) {
+            return tinyPattern(24, 16, 15);
+        } else if (character.equals("K") || character.equals("k")) {
+            return tinyPattern(31, 4, 27);
+        } else if (character.equals("L") || character.equals("l")) {
+            return tinyPattern(31, 16, 16);
+        } else if (character.equals("M") || character.equals("m")) {
+            return tinyPattern(31, 6, 31);
+        } else if (character.equals("N") || character.equals("n")) {
+            return tinyPattern(31, 14, 31);
+        } else if (character.equals("P") || character.equals("p")) {
+            return tinyPattern(31, 5, 7);
+        } else if (character.equals("Q") || character.equals("q")) {
+            return tinyPattern(15, 21, 31);
+        } else if (character.equals("R") || character.equals("r")) {
+            return tinyPattern(31, 5, 26);
+        } else if (character.equals("T") || character.equals("t")) {
+            return tinyPattern(1, 31, 1);
+        } else if (character.equals("U") || character.equals("u")) {
+            return tinyPattern(31, 16, 31);
+        } else if (character.equals("V") || character.equals("v")) {
+            return tinyPattern(15, 16, 15);
+        } else if (character.equals("W") || character.equals("w")) {
+            return tinyPattern(31, 12, 31);
+        } else if (character.equals("X") || character.equals("x")) {
+            return tinyPattern(27, 4, 27);
+        } else if (character.equals("Y") || character.equals("y")) {
+            return tinyPattern(3, 28, 3);
+        } else if (character.equals("Z") || character.equals("z")) {
+            return tinyPattern(25, 21, 19);
+        }
+
+        return tinyPattern(0, 4, 0);
     }
 
     function drawRow(dc, label, value, y, maxWidth, valueColor) {
