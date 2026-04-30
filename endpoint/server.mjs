@@ -545,7 +545,7 @@ export function renderPrivacyPolicyHtml({
     <p>Use HTTPS for the endpoint, keep any custom endpoint token private, and protect the private calendar feed URL. The public endpoint token helps reduce unauthenticated traffic but should not be treated as a user-specific secret. No internet-connected service can be guaranteed completely secure.</p>
 
     <h2>Changes</h2>
-    <p>This policy may be updated when the app or endpoint changes how data is collected, used, stored, or disclosed. Keep the same privacy policy URL active, or redirect it to the new location.</p>
+    <p>This policy may be updated when the app or endpoint changes how data is collected, used, stored, or disclosed.</p>
 
     <h2>Contact</h2>
     <p>${contactHtml}</p>

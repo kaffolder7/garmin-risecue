@@ -25,29 +25,41 @@ Install dependencies:
 npm install
 ```
 
+Use Node 20 or newer; the local scripts rely on Node's built-in `.env` support.
+
+Create a local environment file, then edit it for your calendar and token:
+
+```sh
+cp .env.example .env
+```
+
 Run locally:
 
 ```sh
-CALENDAR_ICS_URL="https://calendar.google.com/calendar/ical/..." \
-CALENDAR_TIME_ZONE="America/New_York" \
 npm start
 ```
 
-The endpoint will listen on `http://localhost:8787` by default.
+`npm start` loads ignored local values from `.env` and the endpoint will listen
+on `http://localhost:8787` by default. If you prefer one-off environment
+variables, run `node endpoint/server.mjs` directly instead of `npm start`.
 By default, the endpoint reads the calendar configured in `CALENDAR_ICS_URL`.
 To let callers provide their own private ICS URL in the `X-RiseCue-Calendar-Url`
-HTTPS header, set `ALLOW_REQUEST_CALENDAR_URL=true`. Request-supplied calendar
-URLs must be HTTPS and are not accepted through query string parameters.
+HTTP request header, set `ALLOW_REQUEST_CALENDAR_URL=true`. Request-supplied
+calendar URLs must be HTTPS URLs with public hostnames, must not include
+embedded credentials, and are not accepted through query string parameters.
+Local, private, link-local, and reserved hostnames/IP ranges are rejected before
+the endpoint fetches the calendar.
 Normal morning events use their start time as the wake target. Overnight events
 that start before the morning window and end inside it use their end time.
 
-The same server also exposes a public privacy policy at:
+The same server also exposes a health check and public privacy policy at:
 
 ```text
+https://public-host.example.com/health
 https://public-host.example.com/privacy
 ```
 
-Set `PRIVACY_CONTACT_EMAIL` and optionally `PRIVACY_EFFECTIVE_DATE` before publishing so the policy has current contact details. The `/privacy` page is intentionally not protected by `ENDPOINT_TOKEN`.
+Set `PRIVACY_CONTACT_EMAIL` and optionally `PRIVACY_EFFECTIVE_DATE` before publishing so the policy has current contact details. The `/health` and `/privacy` pages are intentionally not protected by `ENDPOINT_TOKEN`.
 
 Watch setting value example:
 
@@ -84,6 +96,8 @@ Endpoint response without an event:
 ### Endpoint Deployment
 
 The watch app needs a hosted calendar endpoint that it can reach over HTTPS. Any Node/Docker-capable host should work; Coolify is one possible option.
+The included Docker image has a health check that calls `/health` on the
+configured `PORT`.
 
 Coolify example:
 
@@ -266,8 +280,9 @@ RISECUE_PUBLIC_ENDPOINT_TOKEN=use-a-long-random-secret npm run package:watch:pub
 `package:watch:public` also loads ignored local `.env` values via Node's
 `--env-file-if-exists=.env`; it reads `RISECUE_PUBLIC_ENDPOINT_TOKEN` first and
 falls back to `ENDPOINT_TOKEN`. The embedded token is only sent when the watch is
-using the built-in public endpoint URL. Custom endpoint URLs continue to use the
-visible `Calendar endpoint token` app setting.
+using the built-in public endpoint URL,
+`https://risecue.affolder.dev/next-morning-event`. Custom endpoint URLs
+continue to use the visible `Calendar endpoint token` app setting.
 
 The package is written to:
 
@@ -283,14 +298,14 @@ For the listing, be explicit:
 - It requires the Background, Communications, and Notifications permissions.
 - It requires a hosted calendar endpoint.
 - Calendar data is processed by either a free, public (and private) endpoint or you may self-host your own calendar event-processing endpoint.
-- Include the privacy policy URL (e.g. `https://risecue.example.com/privacy`), since private ICS URLs, event titles, and event times may pass through a public server endpoint.
+- Include the privacy policy URL (e.g. `https://risecue.affolder.dev/privacy` for the built-in endpoint or your own `/privacy` URL when self-hosting), since private ICS URLs, event titles, and event times may pass through a public server endpoint.
 
 ## App Settings
 
 Configure these in Garmin Connect / Connect IQ:
 
 - Enable wake alerts
-- Calendar endpoint URL
+- Calendar endpoint URL, default `https://risecue.affolder.dev/next-morning-event`; keep this for the built-in public endpoint or replace it with your self-hosted endpoint
 - Calendar ICS URL, optional; set this to a private HTTPS `.ics` URL only when the hosted endpoint has `ALLOW_REQUEST_CALENDAR_URL=true`
 - Calendar endpoint token, used for custom/self-hosted endpoints; public builds use the embedded token only with the built-in endpoint URL
 - Time zone
@@ -338,4 +353,6 @@ Tone and vibration notes:
 npm test
 ```
 
-The tests cover tomorrow-window calculation, single events, all-day event ignoring, and weekly recurrence expansion in the endpoint.
+The tests cover tomorrow-window calculation, single events, overnight event
+targets, all-day event ignoring, weekly recurrence expansion, request calendar
+URL validation, endpoint privacy/token behavior, and watch request configuration.
