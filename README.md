@@ -255,16 +255,21 @@ connectiq
 ```
 
 Wait for the Connect IQ Simulator app to open, then run the matching `.prg` for
-the device in another terminal:
+the device in another terminal. Include the generated settings JSON so the
+simulator can open `File > Edit Persistent Storage > Edit Application.Properties
+data`:
 
 ```sh
 monkeydo \
   bin/RiseCue-epix2pro47mm.prg \
-  epix2pro47mm
+  epix2pro47mm \
+  -a "bin/RiseCue-epix2pro47mm-settings.json:GARMIN/Settings/RISECUE-EPIX2PRO47MM-settings.json"
 ```
 
 > [!NOTE]
 > Ensure that `monkeydo` is on your `PATH`. You can check this by running: `which monkeydo`.
+> If the simulator still says no settings file is available, run
+> `File > Reset All App Data`, then run `monkeydo` again with the `-a` flag.
 
 For physical sideload testing, connect the watch over USB and copy the matching `.prg` into:
 
