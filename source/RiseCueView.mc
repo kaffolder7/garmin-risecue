@@ -157,8 +157,9 @@ class RiseCueView extends WatchUi.View {
     }
 
     function drawTinyText(dc, centerX, y, text, maxWidth, color) {
+        var pixelSize = 2;
         var value = text.toString();
-        var textWidth = tinyTextWidth(value);
+        var textWidth = tinyTextWidth(value, pixelSize);
         var x = centerX - (textWidth / 2);
         var minX = centerX - (maxWidth / 2);
         var maxX = centerX + (maxWidth / 2);
@@ -170,23 +171,23 @@ class RiseCueView extends WatchUi.View {
             for (var columnIndex = 0; columnIndex < 3; columnIndex++) {
                 var column = (glyph >> (columnIndex * 5)) & 31;
                 for (var rowIndex = 0; rowIndex < 5; rowIndex++) {
-                    var pixelX = x + columnIndex;
-                    if (pixelX >= minX && pixelX <= maxX && (column & (1 << rowIndex)) != 0) {
-                        dc.fillRectangle(pixelX, y + rowIndex, 1, 1);
+                    var pixelX = x + (columnIndex * pixelSize);
+                    if (pixelX >= minX && pixelX + pixelSize <= maxX && (column & (1 << rowIndex)) != 0) {
+                        dc.fillRectangle(pixelX, y + (rowIndex * pixelSize), pixelSize, pixelSize);
                     }
                 }
             }
 
-            x += 4;
+            x += (4 * pixelSize);
         }
     }
 
-    function tinyTextWidth(text) {
+    function tinyTextWidth(text, pixelSize) {
         if (text == null || text.length() == 0) {
             return 0;
         }
 
-        return (text.length() * 4) - 1;
+        return (text.length() * 4 * pixelSize) - pixelSize;
     }
 
     function tinyPattern(column0, column1, column2) {
