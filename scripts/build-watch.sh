@@ -17,6 +17,19 @@ find_latest_sdk_bin() {
   fi
 }
 
+annotate_build_output() {
+  local DEVICE="$1"
+  local LINE
+
+  while IFS= read -r LINE || [[ -n "$LINE" ]]; do
+    if [[ "$LINE" == "BUILD SUCCESSFUL" ]]; then
+      printf 'BUILD SUCCESSFUL (%s)\n' "$DEVICE"
+    else
+      printf '%s\n' "$LINE"
+    fi
+  done
+}
+
 LATEST_SDK_ROOT="$(find_latest_sdk_bin)"
 LATEST_SDK_BIN="${LATEST_SDK_ROOT:+$LATEST_SDK_ROOT/bin}"
 SDK_BIN="${CONNECTIQ_SDK_BIN:-${LATEST_SDK_BIN:-$FALLBACK_SDK_BIN}}"
@@ -60,5 +73,5 @@ for DEVICE in "${DEVICES[@]}"; do
     -d "$DEVICE" \
     -o "$ROOT_DIR/bin/RiseCue-$DEVICE.prg" \
     -y "$KEY_PATH" \
-    -w
+    -w | annotate_build_output "$DEVICE"
 done
