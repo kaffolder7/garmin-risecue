@@ -125,44 +125,119 @@ cleanup_public_token_build() {
   fi
 }
 
-create_public_token_build_files() {
-  local PUBLIC_ENDPOINT_TOKEN="${RISECUE_PUBLIC_ENDPOINT_TOKEN:-${ENDPOINT_TOKEN:-}}"
+should_create_build_config_override_files() {
+  [[ "${RISECUE_EMBED_PUBLIC_ENDPOINT_TOKEN:-}" == "1" \
+    || -n "${RISECUE_APP_BUILD_VERSION+x}" \
+    || -n "${RISECUE_SHOW_BUILD_VERSION+x}" ]]
+}
+
+create_build_config_override_files() {
+  local PUBLIC_ENDPOINT_TOKEN=""
   local PUBLIC_SOURCE_DIR
   local PUBLIC_SOURCE_FILE
   local PUBLIC_JUNGLE_FILE
 
-  if [[ -z "$PUBLIC_ENDPOINT_TOKEN" ]]; then
-    echo "Public watch build requires RISECUE_PUBLIC_ENDPOINT_TOKEN or ENDPOINT_TOKEN." >&2
-    exit 1
+  if [[ "${RISECUE_EMBED_PUBLIC_ENDPOINT_TOKEN:-}" == "1" ]]; then
+    PUBLIC_ENDPOINT_TOKEN="${RISECUE_PUBLIC_ENDPOINT_TOKEN:-${ENDPOINT_TOKEN:-}}"
+
+    if [[ -z "$PUBLIC_ENDPOINT_TOKEN" ]]; then
+      echo "Public watch build requires RISECUE_PUBLIC_ENDPOINT_TOKEN or ENDPOINT_TOKEN." >&2
+      exit 1
+    fi
   fi
 
   if ! command -v node >/dev/null 2>&1; then
-    echo "node is required to generate public watch build config." >&2
+    echo "node is required to generate watch build config overrides." >&2
     exit 1
   fi
 
   PUBLIC_BUILD_DIR="$(mktemp -d "$ROOT_DIR/bin/public-watch-build.XXXXXX")"
   PUBLIC_SOURCE_DIR="$PUBLIC_BUILD_DIR/source"
-  PUBLIC_SOURCE_FILE="$PUBLIC_SOURCE_DIR/RiseCueBuildConfigPublic.mc"
-  PUBLIC_JUNGLE_FILE="$PUBLIC_BUILD_DIR/public-token.jungle"
+  PUBLIC_SOURCE_FILE="$PUBLIC_SOURCE_DIR/RiseCueBuildConfigOverride.mc"
+  PUBLIC_JUNGLE_FILE="$PUBLIC_BUILD_DIR/build-config.jungle"
 
   mkdir -p "$PUBLIC_SOURCE_DIR"
 
-  PUBLIC_ENDPOINT_TOKEN="$PUBLIC_ENDPOINT_TOKEN" node - "$PUBLIC_SOURCE_FILE" <<'NODE'
+  PUBLIC_ENDPOINT_TOKEN="$PUBLIC_ENDPOINT_TOKEN" \
+    APP_BUILD_VERSION="${RISECUE_APP_BUILD_VERSION-}" \
+    APP_BUILD_VERSION_IS_SET="${RISECUE_APP_BUILD_VERSION+x}" \
+    SHOW_BUILD_VERSION="${RISECUE_SHOW_BUILD_VERSION-}" \
+    SHOW_BUILD_VERSION_IS_SET="${RISECUE_SHOW_BUILD_VERSION+x}" \
+    node - "$PUBLIC_SOURCE_FILE" "$ROOT_DIR/source/RiseCueBuildConfig.mc" <<'NODE'
 const fs = require('fs');
 
 const outputPath = process.argv[2];
+const defaultConfigPath = process.argv[3];
 const token = process.env.PUBLIC_ENDPOINT_TOKEN || '';
+const defaultConfig = fs.readFileSync(defaultConfigPath, 'utf8');
 
-if (/[\x00-\x1f\x7f]/.test(token)) {
-  console.error('Public endpoint token must not contain control characters.');
+function readDefaultString(name) {
+  const match = defaultConfig.match(new RegExp(`const\\s+${name}\\s*=\\s*"((?:\\\\.|[^"\\\\])*)";`));
+
+  if (!match) {
+    return '';
+  }
+
+  try {
+    return JSON.parse(`"${match[1]}"`);
+  } catch {
+    return match[1];
+  }
+}
+
+function readDefaultBoolean(name) {
+  const match = defaultConfig.match(new RegExp(`const\\s+${name}\\s*=\\s*(true|false);`));
+  return match ? match[1] === 'true' : false;
+}
+
+function parseBooleanFlag(value) {
+  const normalized = value.trim().toLowerCase();
+
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) {
+    return true;
+  }
+
+  if (['0', 'false', 'no', 'off'].includes(normalized)) {
+    return false;
+  }
+
+  console.error('RISECUE_SHOW_BUILD_VERSION must be true or false.');
   process.exit(1);
 }
 
-const escapedToken = token.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-const source = `module RiseCueBuildConfig {
+function assertNoControlCharacters(value, label) {
+  if (/[\x00-\x1f\x7f]/.test(value)) {
+    console.error(`${label} must not contain control characters.`);
+    process.exit(1);
+  }
+}
+
+function escapeMonkeyString(value) {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+const appBuildVersion = process.env.APP_BUILD_VERSION_IS_SET
+  ? process.env.APP_BUILD_VERSION
+  : readDefaultString('APP_BUILD_VERSION');
+const showBuildVersion = process.env.SHOW_BUILD_VERSION_IS_SET
+  ? parseBooleanFlag(process.env.SHOW_BUILD_VERSION || '')
+  : readDefaultBoolean('SHOW_BUILD_VERSION');
+
+assertNoControlCharacters(token, 'Public endpoint token');
+assertNoControlCharacters(appBuildVersion, 'App build version');
+
+const source = `(:background)
+module RiseCueBuildConfig {
+    function getAppBuildVersion() {
+        return "${escapeMonkeyString(appBuildVersion)}";
+    }
+
+    function shouldShowBuildVersion() {
+        return ${showBuildVersion ? 'true' : 'false'};
+    }
+
     function getPublicEndpointToken() {
-        return "${escapedToken}";
+        return "${escapeMonkeyString(token)}";
     }
 }
 `;
@@ -171,7 +246,7 @@ fs.writeFileSync(outputPath, source, 'utf8');
 NODE
 
   printf 'base.sourcePath = $(base.sourcePath);"%s"\n' "$PUBLIC_SOURCE_DIR" > "$PUBLIC_JUNGLE_FILE"
-  printf 'base.excludeAnnotations = defaultPublicEndpointToken\n' >> "$PUBLIC_JUNGLE_FILE"
+  printf 'base.excludeAnnotations = defaultBuildConfig\n' >> "$PUBLIC_JUNGLE_FILE"
 
   JUNGLE_FILES="$ROOT_DIR/monkey.jungle;$PUBLIC_JUNGLE_FILE"
 }
@@ -208,9 +283,9 @@ fi
 
 mkdir -p "$ROOT_DIR/bin"
 
-if [[ "${RISECUE_EMBED_PUBLIC_ENDPOINT_TOKEN:-}" == "1" ]]; then
+if should_create_build_config_override_files; then
   trap cleanup_public_token_build EXIT
-  create_public_token_build_files
+  create_build_config_override_files
 fi
 
 JAVA_HOME="$RESOLVED_JAVA_HOME"

@@ -618,7 +618,7 @@ test('watch token selection uses compiled token only for the default public endp
 
   assert.match(config, /DEFAULT_ENDPOINT_URL = "https:\/\/risecue\.affolder\.dev\/next-morning-event"/);
   assert.match(buildConfig, /module RiseCueBuildConfig/);
-  assert.match(buildConfig, /\(:defaultPublicEndpointToken\)/);
+  assert.match(buildConfig, /\(:defaultBuildConfig\)/);
   assert.match(buildConfig, /function getPublicEndpointToken\(\)/);
   assert.match(config, /function isDefaultEndpointUrl\(endpoint\)/);
   assert.match(config, /endpoint != null && endpoint\.equals\(DEFAULT_ENDPOINT_URL\)/);
@@ -629,7 +629,7 @@ test('watch token selection uses compiled token only for the default public endp
   assert.match(workflow, /RiseCueConfig\.getEndpointTokenForEndpoint\(endpoint\)/);
   assert.match(workflow, /headers\["X-RiseCue-Token"\] = endpointToken/);
   assert.equal(settings.includes('RISECUE_PUBLIC_ENDPOINT_TOKEN'), false);
-  assert.equal(settings.includes('defaultPublicEndpointToken'), false);
+  assert.equal(settings.includes('defaultBuildConfig'), false);
 
   assert.equal(
     packageJson.scripts['build:watch:public'],
@@ -641,12 +641,37 @@ test('watch token selection uses compiled token only for the default public endp
   );
   assert.match(buildWatchPublic, /RISECUE_EMBED_PUBLIC_ENDPOINT_TOKEN: '1'/);
   assert.match(buildWatch, /RISECUE_PUBLIC_ENDPOINT_TOKEN:-\$\{ENDPOINT_TOKEN:-\}/);
-  assert.match(buildWatch, /RiseCueBuildConfigPublic\.mc/);
-  assert.match(buildWatch, /base\.excludeAnnotations = defaultPublicEndpointToken/);
+  assert.match(buildWatch, /RiseCueBuildConfigOverride\.mc/);
+  assert.match(buildWatch, /base\.excludeAnnotations = defaultBuildConfig/);
   assert.match(packageWatchPublic, /RISECUE_EMBED_PUBLIC_ENDPOINT_TOKEN: '1'/);
   assert.match(packageWatch, /RISECUE_PUBLIC_ENDPOINT_TOKEN:-\$\{ENDPOINT_TOKEN:-\}/);
-  assert.match(packageWatch, /RiseCueBuildConfigPublic\.mc/);
-  assert.match(packageWatch, /base\.excludeAnnotations = defaultPublicEndpointToken/);
+  assert.match(packageWatch, /RiseCueBuildConfigOverride\.mc/);
+  assert.match(packageWatch, /base\.excludeAnnotations = defaultBuildConfig/);
+});
+
+test('watch build version display is controlled at build time', async () => {
+  const config = await readFile(new URL('../source/RiseCueConfig.mc', import.meta.url), 'utf8');
+  const view = await readFile(new URL('../source/RiseCueView.mc', import.meta.url), 'utf8');
+  const buildConfig = await readFile(new URL('../source/RiseCueBuildConfig.mc', import.meta.url), 'utf8');
+  const properties = await readFile(new URL('../resources/properties/properties.xml', import.meta.url), 'utf8');
+  const settings = await readFile(new URL('../resources/settings/settings.xml', import.meta.url), 'utf8');
+  const strings = await readFile(new URL('../resources/strings/strings.xml', import.meta.url), 'utf8');
+  const buildWatch = await readFile(new URL('../scripts/build-watch.sh', import.meta.url), 'utf8');
+  const packageWatch = await readFile(new URL('../scripts/package-watch.sh', import.meta.url), 'utf8');
+
+  assert.match(buildConfig, /const APP_BUILD_VERSION = "0\.1\.0"/);
+  assert.match(buildConfig, /const SHOW_BUILD_VERSION = true/);
+  assert.match(buildConfig, /function shouldShowBuildVersion\(\)/);
+  assert.match(view, /RiseCueBuildConfig\.shouldShowBuildVersion\(\)/);
+  assert.match(view, /RiseCueBuildConfig\.getAppBuildVersion\(\)/);
+  assert.equal(config.includes('showBuildVersion'), false);
+  assert.equal(properties.includes('showBuildVersion'), false);
+  assert.equal(settings.includes('showBuildVersion'), false);
+  assert.equal(strings.includes('SettingShowBuildVersionTitle'), false);
+  assert.match(buildWatch, /RISECUE_APP_BUILD_VERSION/);
+  assert.match(buildWatch, /RISECUE_SHOW_BUILD_VERSION/);
+  assert.match(packageWatch, /RISECUE_APP_BUILD_VERSION/);
+  assert.match(packageWatch, /RISECUE_SHOW_BUILD_VERSION/);
 });
 
 test('watch response handling prefers calendar target fields with start fallback', async () => {

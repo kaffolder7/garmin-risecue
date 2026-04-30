@@ -219,6 +219,14 @@ npm run build:watch:public -- epix2pro47mm
 The output path is still `bin/RiseCue-epix2pro47mm.prg`, so the usual
 `monkeydo bin/RiseCue-epix2pro47mm.prg epix2pro47mm` flow works.
 
+The tiny build version footer is enabled by default. Manually edit
+`APP_BUILD_VERSION` in `source/RiseCueBuildConfig.mc`, or override a specific
+build with environment variables:
+
+```sh
+RISECUE_APP_BUILD_VERSION=0.1.1 RISECUE_SHOW_BUILD_VERSION=false npm run build:watch -- epix2pro47mm
+```
+
 The script uses Homebrew OpenJDK 21 at `/opt/homebrew/opt/openjdk@21` and creates an ignored local `developer_key.der` if one is not already present. Override with `CONNECTIQ_SDK_BIN`, `JAVA_HOME`, or `CONNECTIQ_DEVELOPER_KEY` as needed.
 
 The developer key is not requested from Garmin. It is a local signing key used by `monkeyc -y`. For long-term use, keep it somewhere backed up and private, then point builds at it:
