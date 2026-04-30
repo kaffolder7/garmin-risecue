@@ -158,6 +158,7 @@ class RiseCueView extends WatchUi.View {
 
     function drawTinyText(dc, centerX, y, text, maxWidth, color) {
         var pixelSize = 2;
+        var strokeHeight = 1;
         var value = text.toString();
         var textWidth = tinyTextWidth(value, pixelSize);
         var x = centerX - (textWidth / 2);
@@ -173,7 +174,7 @@ class RiseCueView extends WatchUi.View {
                 for (var rowIndex = 0; rowIndex < 5; rowIndex++) {
                     var pixelX = x + (columnIndex * pixelSize);
                     if (pixelX >= minX && pixelX + pixelSize <= maxX && (column & (1 << rowIndex)) != 0) {
-                        dc.fillRectangle(pixelX, y + (rowIndex * pixelSize), pixelSize, pixelSize);
+                        dc.fillRectangle(pixelX, y + (rowIndex * pixelSize), pixelSize, strokeHeight);
                     }
                 }
             }
