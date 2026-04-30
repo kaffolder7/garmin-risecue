@@ -52,6 +52,25 @@ the endpoint fetches the calendar.
 Normal morning events use their start time as the wake target. Overnight events
 that start before the morning window and end inside it use their end time.
 
+### Environment Variables
+
+There are three related but separate places where configuration can live:
+
+| Setup | Deployed endpoint env | Local watch-build env | Garmin app setting |
+| --- | --- | --- | --- |
+| Built-in public endpoint, `https://risecue.affolder.dev/next-morning-event` | Managed on the public service: `ENDPOINT_TOKEN`, `ALLOW_REQUEST_CALENDAR_URL=true`, `CALENDAR_TIME_ZONE=America/New_York` or another default zone | `RISECUE_PUBLIC_ENDPOINT_TOKEN` must match the deployed public endpoint's `ENDPOINT_TOKEN` when running `build:watch:public` or `package:watch:public` | Keep default endpoint URL, set `Calendar ICS URL`, leave `Calendar endpoint token` blank |
+| Self-hosted shared endpoint, each watch supplies its own calendar | `ENDPOINT_TOKEN=replace-with-a-long-random-token`, `ALLOW_REQUEST_CALENDAR_URL=true`, `CALENDAR_TIME_ZONE=America/New_York`; `CALENDAR_ICS_URL` optional fallback | None required for normal `build:watch`; use `ENDPOINT_TOKEN` only if also running the endpoint locally | Set your endpoint URL, set `Calendar ICS URL`, set `Calendar endpoint token` to `ENDPOINT_TOKEN` |
+| Self-hosted single-calendar endpoint | `ENDPOINT_TOKEN=replace-with-a-long-random-token`, `CALENDAR_ICS_URL=https://.../basic.ics`, `ALLOW_REQUEST_CALENDAR_URL=false`, `CALENDAR_TIME_ZONE=America/New_York` | None required for normal `build:watch`; use `ENDPOINT_TOKEN` only if also running the endpoint locally | Set your endpoint URL, leave `Calendar ICS URL` blank, set `Calendar endpoint token` to `ENDPOINT_TOKEN` |
+
+`ENDPOINT_TOKEN` is what an endpoint service accepts. `RISECUE_PUBLIC_ENDPOINT_TOKEN`
+is what public watch builds embed for the built-in public endpoint. Those two
+values must be identical for a public watch binary to authenticate with the
+public endpoint. Custom or self-hosted endpoint URLs do not use the embedded
+public token; they use the visible Garmin `Calendar endpoint token` app setting.
+Your local `.env` may contain both values when you run the endpoint locally and
+also build public watch binaries, but deployed endpoint services only read
+`ENDPOINT_TOKEN`.
+
 The same server also exposes a health check and public privacy policy at:
 
 ```text
@@ -108,7 +127,9 @@ Push this repo to GitHub, Gitea, or another Git host Coolify can read, then in C
 3. Choose the Dockerfile build pack.
 4. Set the base directory to `/`.
 5. Expose port `8787`.
-6. Add runtime environment variables:
+6. Add runtime environment variables.
+
+For a single-calendar self-hosted endpoint:
 
 ```env
 CALENDAR_ICS_URL=https://calendar.google.com/calendar/ical/private-calendar/basic.ics
@@ -122,18 +143,32 @@ PORT=8787
 HOST=0.0.0.0
 ```
 
-For a shared endpoint where each watch supplies its own private calendar URL,
-set `ALLOW_REQUEST_CALENDAR_URL=true`. You may omit `CALENDAR_ICS_URL`, or keep it
-as a fallback calendar for requests that do not include the header.
+For a shared self-hosted endpoint where each watch supplies its own private
+calendar URL:
+
+```env
+CALENDAR_TIME_ZONE=America/New_York
+ENDPOINT_TOKEN=use-a-long-random-secret
+ALLOW_REQUEST_CALENDAR_URL=true
+PRIVACY_CONTACT_EMAIL=privacy@example.com
+PRIVACY_EFFECTIVE_DATE="April 28, 2026"
+PRIVACY_PUBLIC_ENDPOINT_ORIGIN=https://risecue.example.com
+PORT=8787
+HOST=0.0.0.0
+```
+
+You may add `CALENDAR_ICS_URL` to the shared setup as a fallback calendar for
+requests that do not include `X-RiseCue-Calendar-Url`.
 
 After deployment, test the endpoint:
 
 ```sh
 curl https://risecue.example.com/health
 curl https://risecue.example.com/privacy
+# Single-calendar endpoint, or shared endpoint with CALENDAR_ICS_URL fallback:
 curl -H "X-RiseCue-Token: use-a-long-random-secret" \
   "https://risecue.example.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
-# When ALLOW_REQUEST_CALENDAR_URL=true:
+# Shared endpoint without fallback, or to test a request-supplied calendar:
 curl -H "X-RiseCue-Token: use-a-long-random-secret" \
   -H "X-RiseCue-Calendar-Url: https://calendar.google.com/calendar/ical/private-calendar/basic.ics" \
   "https://risecue.example.com/next-morning-event?windowStart=04:00&windowEnd=12:00"
