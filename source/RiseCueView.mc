@@ -153,7 +153,7 @@ class RiseCueView extends WatchUi.View {
             return;
         }
 
-        drawTinyText(dc, centerX, top + ((size * 90) / 100), version, safeWidth(size, 44), COLOR_DIM);
+        drawTinyText(dc, centerX, top + ((size * 92) / 100), version, safeWidth(size, 44), COLOR_DIM);
     }
 
     function drawTinyText(dc, centerX, y, text, maxWidth, color) {
