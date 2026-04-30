@@ -57,7 +57,7 @@ class RiseCueView extends WatchUi.View {
         drawPill(
             dc,
             centerX - ((size * 30) / 200),
-            top + ((size * 25) / 100),
+            top + ((size * 26) / 100),
             (size * 30) / 100,
             pillHeight(size),
             stateColor,
@@ -78,22 +78,22 @@ class RiseCueView extends WatchUi.View {
         drawRow(dc, "Lead", leadStatus, rowStart + (rowGap * 3), rowWidth, COLOR_TEXT);
 
         if (eventTitle != null && eventStart != null) {
-            drawSectionLabel(dc, "NEXT TARGET", top + ((size * 69) / 100), safeWidth(size, 66));
-            drawCenteredWithin(dc, eventTitle.toString(), top + ((size * 75) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
-            drawCenteredWithin(dc, eventStart.toString(), top + ((size * 81) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_MUTED);
+            drawSectionLabel(dc, "NEXT TARGET", top + ((size * 72) / 100), safeWidth(size, 66));
+            drawCenteredWithin(dc, eventTitle.toString(), top + ((size * 78) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
+            drawCenteredWithin(dc, eventStart.toString(), top + ((size * 84) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_MUTED);
         } else if (status != null) {
-            drawSectionLabel(dc, "STATUS", top + ((size * 70) / 100), safeWidth(size, 66));
-            drawCenteredWithin(dc, summarizeStatus(status.toString()), top + ((size * 76) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
+            drawSectionLabel(dc, "STATUS", top + ((size * 72) / 100), safeWidth(size, 66));
+            drawCenteredWithin(dc, summarizeStatus(status.toString()), top + ((size * 79) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
         } else {
-            drawSectionLabel(dc, "STATUS", top + ((size * 70) / 100), safeWidth(size, 66));
-            drawCenteredWithin(dc, "Waiting for trigger", top + ((size * 76) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
+            drawSectionLabel(dc, "STATUS", top + ((size * 72) / 100), safeWidth(size, 66));
+            drawCenteredWithin(dc, "Waiting for trigger", top + ((size * 79) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
         }
 
         if (alertEpoch != null) {
             drawPill(
                 dc,
                 centerX - ((size * 42) / 200),
-                top + ((size * 88) / 100),
+                top + ((size * 90) / 100),
                 (size * 42) / 100,
                 pillHeight(size),
                 COLOR_DIM,
@@ -126,7 +126,7 @@ class RiseCueView extends WatchUi.View {
             var sourceWidth = _launcherIcon.getWidth();
             var sourceHeight = _launcherIcon.getHeight();
             var iconX = centerX - (iconSize / 2);
-            var iconY = top + ((size * 6) / 100);
+            var iconY = top + ((size * 4) / 100);
 
             if (sourceWidth == iconSize && sourceHeight == iconSize) {
                 dc.drawBitmap(iconX, iconY, _launcherIcon);
@@ -229,11 +229,11 @@ class RiseCueView extends WatchUi.View {
     }
 
     function iconDisplaySize(size) {
-        var iconSize = (size * 8) / 100;
-        if (iconSize < 20) {
-            return 20;
-        } else if (iconSize > 30) {
-            return 30;
+        var iconSize = (size * 11) / 100;
+        if (iconSize < 22) {
+            return 22;
+        } else if (iconSize > 42) {
+            return 42;
         }
 
         return iconSize;
