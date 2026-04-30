@@ -104,6 +104,8 @@ class RiseCueView extends WatchUi.View {
         if (!hasQueuedAlert && !hasPreview) {
             drawCenteredWithin(dc, getHealthLine(sunriseStatus, leadStatus), top + ((size * 82) / 100), Graphics.FONT_XTINY, safeWidth(size, 66), COLOR_DIM);
         }
+
+        drawBuildVersion(dc, centerX, top, size);
     }
 
     function drawFrame(dc, centerX, centerY, size) {
@@ -139,6 +141,28 @@ class RiseCueView extends WatchUi.View {
         }
 
         drawCenteredWithin(dc, "RiseCue", top + ((size * 16) / 100), titleFont, safeWidth(size, 70), COLOR_TEXT);
+    }
+
+    function drawBuildVersion(dc, centerX, top, size) {
+        if (!RiseCueConfig.shouldShowBuildVersion()) {
+            return;
+        }
+
+        var version = RiseCueBuildConfig.getAppBuildVersion();
+        if (version == null || version.equals("")) {
+            return;
+        }
+
+        drawTextWithin(
+            dc,
+            centerX,
+            top + ((size * 89) / 100),
+            Graphics.FONT_XTINY,
+            "build " + version,
+            Graphics.TEXT_JUSTIFY_CENTER,
+            safeWidth(size, 44),
+            COLOR_DIM
+        );
     }
 
     function drawRow(dc, label, value, y, maxWidth, valueColor) {
