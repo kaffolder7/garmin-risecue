@@ -148,7 +148,7 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
             var status = mergeSunriseStatus(noTargetStatus);
             RiseCueScheduler.storeStatus(status);
             if (notifyWhenNoTarget) {
-                RiseCueScheduler.showStatusNotification("Calendar Wake", status + ".");
+                RiseCueScheduler.showStatusNotification("RiseCue", status + ".");
             }
             Background.exit({ "status" => noTargetExitStatus });
             return;
@@ -156,7 +156,7 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
 
         var scheduled = RiseCueScheduler.scheduleWakeTarget(target);
         if (!scheduled) {
-            RiseCueScheduler.showStatusNotification("Calendar Wake", "Could not schedule wake alert.");
+            RiseCueScheduler.showStatusNotification("RiseCue", "Could not schedule wake alert.");
             Background.exit({ "status" => "schedule_failed" });
             return;
         }

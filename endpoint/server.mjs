@@ -528,7 +528,7 @@ export function renderPrivacyPolicyHtml({
     <p>${safeAppName} does not collect location data by default. If you enable sunrise alerts, the latitude and longitude you enter are used on the watch for sunrise calculation and are not sent to the included calendar endpoint.</p>
 
     <h2>Your choices</h2>
-    <p>You can stop endpoint processing by disabling calendar wake alerts, removing the calendar endpoint URL or token from app settings, or uninstalling the app. You can disable sunrise alerts or remove sunrise coordinates in app settings. You may use the contact method below to request deletion of user data under the developer's control. If you self-host the endpoint, you control its calendar feed configuration and any server logs created by your hosting setup.</p>
+    <p>You can stop endpoint processing by disabling RiseCue alerts, removing the calendar endpoint URL or token from app settings, or uninstalling the app. You can disable sunrise alerts or remove sunrise coordinates in app settings. You may use the contact method below to request deletion of user data under the developer's control. If you self-host the endpoint, you control its calendar feed configuration and any server logs created by your hosting setup.</p>
 
     <h2>Security</h2>
     <p>Use HTTPS for the endpoint, keep the endpoint token private, and protect the private calendar feed URL. No internet-connected service can be guaranteed completely secure.</p>
@@ -630,6 +630,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const port = Number(process.env.PORT || DEFAULT_PORT);
   const host = process.env.HOST || '0.0.0.0';
   createServer().listen(port, host, () => {
-    console.log(`Calendar Wake endpoint listening on http://${host}:${port}`);
+    console.log(`RiseCue endpoint listening on http://${host}:${port}`);
   });
 }

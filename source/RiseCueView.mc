@@ -18,7 +18,7 @@ class RiseCueView extends WatchUi.View {
         dc.clear();
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(centerX, (height * 15) / 100, Graphics.FONT_LARGE, "Calendar Wake", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(centerX, (height * 15) / 100, Graphics.FONT_LARGE, "RiseCue", Graphics.TEXT_JUSTIFY_CENTER);
 
         var enabled = RiseCueConfig.isEnabled();
         var endpoint = RiseCueConfig.getEndpointUrl();

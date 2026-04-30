@@ -1,6 +1,6 @@
 <resources>
     <strings>
-        <string id="AppName">Calendar Wake</string>
+        <string id="AppName">RiseCue</string>
         <string id="SettingEnabledTitle">Enable wake alerts</string>
         <string id="SettingEndpointTitle">Calendar endpoint URL</string>
         <string id="SettingCalendarIcsUrlTitle">Calendar ICS URL</string>

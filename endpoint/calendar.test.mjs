@@ -18,7 +18,7 @@ function calendarWith(body) {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Calendar Wake Tests//EN',
+    'PRODID:-//RiseCue Tests//EN',
     body.trim(),
     'END:VCALENDAR'
   ].join('\r\n');
