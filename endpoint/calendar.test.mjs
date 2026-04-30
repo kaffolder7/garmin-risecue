@@ -265,6 +265,11 @@ test('privacy policy renders configured contact and Garmin disclosure', () => {
 
   assert.match(html, /RiseCue Privacy Policy/);
   assert.match(html, /mailto:privacy%40example.com/);
+  assert.match(html, /public calendar endpoint operated for the app/);
+  assert.match(html, /X-RiseCue-Calendar-Url/);
+  assert.match(html, /private HTTPS Calendar ICS URL/);
+  assert.match(html, /developer-managed endpoint token in the app package/);
+  assert.match(html, /public endpoint token helps reduce unauthenticated traffic/);
   assert.match(html, /Data submitted to RiseCue or its endpoint is submitted to the app developer or endpoint operator, not to Garmin/);
 });
 
