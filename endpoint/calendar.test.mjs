@@ -672,23 +672,29 @@ test('watch START opens an action menu with conditional alert clearing', async (
   assert.match(view, /START for options/);
 
   assert.match(delegate, /module RiseCueActionMenu/);
-  assert.match(delegate, /ACTION_START_SYNC = "startSync"/);
-  assert.match(delegate, /ACTION_CLEAR_ALERTS = "clearAlerts"/);
+  assert.match(delegate, /ACTION_START_SYNC = :startSync/);
+  assert.match(delegate, /ACTION_CLEAR_ALERTS = :clearAlerts/);
+  assert.match(delegate, /var _actionMenuDelegate/);
+  assert.match(delegate, /_actionMenuDelegate = null;/);
   assert.match(delegate, /function onSelect\(\)[\s\S]*new WatchUi\.ActionMenu\(null\)/);
   assert.match(delegate, /new WatchUi\.ActionMenuItem\(\{ :label => "Start sync" \}, RiseCueActionMenu\.ACTION_START_SYNC\)/);
   assert.match(
     delegate,
     /if \(RiseCueScheduler\.hasQueuedAlert\(\)\) \{[\s\S]*new WatchUi\.ActionMenuItem\(\{ :label => "Clear alert\(s\)" \}, RiseCueActionMenu\.ACTION_CLEAR_ALERTS\)/
   );
-  assert.match(delegate, /WatchUi\.showActionMenu\(menu, new RiseCueActionMenuDelegate\(self\)\)/);
+  assert.match(delegate, /_actionMenuDelegate = new RiseCueActionMenuDelegate\(self\);/);
+  assert.match(delegate, /WatchUi\.showActionMenu\(menu, _actionMenuDelegate\)/);
+  assert.match(delegate, /function clearActionMenuDelegate\(\)[\s\S]*_actionMenuDelegate = null;/);
   assert.match(delegate, /class RiseCueActionMenuDelegate extends WatchUi\.ActionMenuDelegate/);
-  assert.match(delegate, /function onSelect\(item as WatchUi\.ActionMenuItem\) as Void/);
+  assert.match(delegate, /function onSelect\(item\)/);
   assert.match(delegate, /item\.getId\(\)/);
   assert.match(delegate, /itemId == RiseCueActionMenu\.ACTION_START_SYNC[\s\S]*_delegate\.startSync\(\)/);
   assert.match(
     delegate,
     /itemId == RiseCueActionMenu\.ACTION_CLEAR_ALERTS[\s\S]*RiseCueScheduler\.clearQueuedAlertAndResumeWorkflow\(\)[\s\S]*Wake alert cleared/
   );
+  assert.match(delegate, /Action menu selection failed/);
+  assert.match(delegate, /function onBack\(\)[\s\S]*_delegate\.clearActionMenuDelegate\(\)/);
 
   assert.match(delegate, /var _refreshingQueuedAlert/);
   assert.match(delegate, /function startSync\(\)/);

@@ -4,20 +4,22 @@ using Toybox.PersistedContent;
 using Toybox.WatchUi;
 
 module RiseCueActionMenu {
-    const ACTION_START_SYNC = "startSync";
-    const ACTION_CLEAR_ALERTS = "clearAlerts";
+    const ACTION_START_SYNC = :startSync;
+    const ACTION_CLEAR_ALERTS = :clearAlerts;
 }
 
 class RiseCueDelegate extends WatchUi.BehaviorDelegate {
     var _sunriseTarget;
     var _sunriseStatus;
     var _refreshingQueuedAlert;
+    var _actionMenuDelegate;
 
     function initialize() {
         BehaviorDelegate.initialize();
         _sunriseTarget = null;
         _sunriseStatus = null;
         _refreshingQueuedAlert = false;
+        _actionMenuDelegate = null;
     }
 
     function onSelect() {
@@ -27,8 +29,13 @@ class RiseCueDelegate extends WatchUi.BehaviorDelegate {
             menu.addItem(new WatchUi.ActionMenuItem({ :label => "Clear alert(s)" }, RiseCueActionMenu.ACTION_CLEAR_ALERTS));
         }
 
-        WatchUi.showActionMenu(menu, new RiseCueActionMenuDelegate(self));
+        _actionMenuDelegate = new RiseCueActionMenuDelegate(self);
+        WatchUi.showActionMenu(menu, _actionMenuDelegate);
         return true;
+    }
+
+    function clearActionMenuDelegate() {
+        _actionMenuDelegate = null;
     }
 
     function startSync() {
@@ -143,7 +150,7 @@ class RiseCueActionMenuDelegate extends WatchUi.ActionMenuDelegate {
         _delegate = delegate;
     }
 
-    function onSelect(item as WatchUi.ActionMenuItem) as Void {
+    function onSelect(item) {
         var itemId = item.getId();
         if (itemId == RiseCueActionMenu.ACTION_START_SYNC) {
             _delegate.startSync();
@@ -152,6 +159,14 @@ class RiseCueActionMenuDelegate extends WatchUi.ActionMenuDelegate {
                 RiseCueScheduler.storeStatus("Wake alert cleared");
             }
             WatchUi.requestUpdate();
+        } else {
+            RiseCueScheduler.storeStatus("Action menu selection failed");
+            WatchUi.requestUpdate();
         }
+        _delegate.clearActionMenuDelegate();
+    }
+
+    function onBack() {
+        _delegate.clearActionMenuDelegate();
     }
 }
