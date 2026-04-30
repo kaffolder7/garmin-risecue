@@ -120,6 +120,18 @@ module RiseCueConfig {
         return getString(PROP_ENDPOINT_TOKEN, "");
     }
 
+    function isDefaultEndpointUrl(endpoint) {
+        return endpoint != null && endpoint.equals(DEFAULT_ENDPOINT_URL);
+    }
+
+    function getEndpointTokenForEndpoint(endpoint) {
+        if (isDefaultEndpointUrl(endpoint)) {
+            return RiseCueBuildConfig.getPublicEndpointToken();
+        }
+
+        return getEndpointToken();
+    }
+
     function getNotificationBody() {
         return getString(PROP_NOTIFICATION_BODY, "Upcoming: {eventTitle} at {eventStartLocal}");
     }

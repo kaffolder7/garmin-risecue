@@ -129,7 +129,7 @@ Use these Garmin app setting values:
 ```text
 Calendar endpoint URL: https://garmin-risecue.example.com/next-morning-event
 Calendar ICS URL: leave blank when the endpoint uses CALENDAR_ICS_URL, or set your private HTTPS .ics URL when the endpoint allows request calendar URLs
-Calendar endpoint token: use-a-long-random-secret
+Calendar endpoint token: use-a-long-random-secret for custom/self-hosted builds; leave blank for public builds that embed the built-in endpoint token
 Calendar time zone: choose Endpoint default, UTC, or a common IANA zone such as America/New_York
 ```
 
@@ -256,6 +256,19 @@ Package the app:
 npm run package:watch
 ```
 
+Package a Store/public-endpoint build with a token embedded for the built-in
+RiseCue endpoint:
+
+```sh
+RISECUE_PUBLIC_ENDPOINT_TOKEN=use-a-long-random-secret npm run package:watch:public
+```
+
+`package:watch:public` also loads ignored local `.env` values via Node's
+`--env-file-if-exists=.env`; it reads `RISECUE_PUBLIC_ENDPOINT_TOKEN` first and
+falls back to `ENDPOINT_TOKEN`. The embedded token is only sent when the watch is
+using the built-in public endpoint URL. Custom endpoint URLs continue to use the
+visible `Calendar endpoint token` app setting.
+
 The package is written to:
 
 ```text
@@ -279,6 +292,7 @@ Configure these in Garmin Connect / Connect IQ:
 - Enable wake alerts
 - Calendar endpoint URL
 - Calendar ICS URL, optional; set this to a private HTTPS `.ics` URL only when the hosted endpoint has `ALLOW_REQUEST_CALENDAR_URL=true`
+- Calendar endpoint token, used for custom/self-hosted endpoints; public builds use the embedded token only with the built-in endpoint URL
 - Time zone
 - Manual workflow time, optional `HH:MM` 24-hour watch-local time such as `21:30`; leave blank to use the watch's Sleep Time trigger
 - Enable sunrise alerts, default `false`

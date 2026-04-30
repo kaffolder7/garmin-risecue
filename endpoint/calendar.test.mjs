@@ -479,6 +479,39 @@ test('watch request includes configured calendar URL header only from the new se
   assert.equal(REQUEST_CALENDAR_URL_HEADER, 'x-risecue-calendar-url');
 });
 
+test('watch token selection uses compiled token only for the default public endpoint', async () => {
+  const serviceDelegate = await readFile(new URL('../source/RiseCueServiceDelegate.mc', import.meta.url), 'utf8');
+  const config = await readFile(new URL('../source/RiseCueConfig.mc', import.meta.url), 'utf8');
+  const buildConfig = await readFile(new URL('../source/RiseCueBuildConfig.mc', import.meta.url), 'utf8');
+  const settings = await readFile(new URL('../resources/settings/settings.xml', import.meta.url), 'utf8');
+  const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+  const packageWatch = await readFile(new URL('../scripts/package-watch.sh', import.meta.url), 'utf8');
+  const packageWatchPublic = await readFile(new URL('../scripts/package-watch-public.mjs', import.meta.url), 'utf8');
+
+  assert.match(config, /DEFAULT_ENDPOINT_URL = "https:\/\/garmin-risecue\.affolder\.cloud\/next-morning-event"/);
+  assert.match(buildConfig, /module RiseCueBuildConfig/);
+  assert.match(buildConfig, /\(:defaultPublicEndpointToken\)/);
+  assert.match(buildConfig, /function getPublicEndpointToken\(\)/);
+  assert.match(config, /function isDefaultEndpointUrl\(endpoint\)/);
+  assert.match(config, /endpoint != null && endpoint\.equals\(DEFAULT_ENDPOINT_URL\)/);
+  assert.match(config, /function getEndpointTokenForEndpoint\(endpoint\)/);
+  assert.match(config, /RiseCueBuildConfig\.getPublicEndpointToken\(\)/);
+  assert.match(config, /return getEndpointToken\(\)/);
+  assert.match(serviceDelegate, /RiseCueConfig\.getEndpointTokenForEndpoint\(endpoint\)/);
+  assert.match(serviceDelegate, /headers\["X-RiseCue-Token"\] = endpointToken/);
+  assert.equal(settings.includes('RISECUE_PUBLIC_ENDPOINT_TOKEN'), false);
+  assert.equal(settings.includes('defaultPublicEndpointToken'), false);
+
+  assert.equal(
+    packageJson.scripts['package:watch:public'],
+    'node --env-file-if-exists=.env scripts/package-watch-public.mjs'
+  );
+  assert.match(packageWatchPublic, /RISECUE_EMBED_PUBLIC_ENDPOINT_TOKEN: '1'/);
+  assert.match(packageWatch, /RISECUE_PUBLIC_ENDPOINT_TOKEN:-\$\{ENDPOINT_TOKEN:-\}/);
+  assert.match(packageWatch, /RiseCueBuildConfigPublic\.mc/);
+  assert.match(packageWatch, /base\.excludeAnnotations = defaultPublicEndpointToken/);
+});
+
 test('watch response handling prefers calendar target fields with start fallback', async () => {
   const serviceDelegate = await readFile(new URL('../source/RiseCueServiceDelegate.mc', import.meta.url), 'utf8');
 

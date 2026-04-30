@@ -8,6 +8,7 @@
     "build:watch": "scripts/build-watch.sh",
     "package:watch": "scripts/package-watch.sh",
     "start": "node endpoint/server.mjs",
+    "package:watch:public": "node --env-file-if-exists=.env scripts/package-watch-public.mjs",
     "test": "node --test endpoint/*.test.mjs"
   },
   "dependencies": {

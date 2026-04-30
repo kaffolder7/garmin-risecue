@@ -75,7 +75,7 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
             headers["X-RiseCue-Calendar-Url"] = calendarIcsUrl;
         }
 
-        var endpointToken = RiseCueConfig.getEndpointToken();
+        var endpointToken = RiseCueConfig.getEndpointTokenForEndpoint(endpoint);
         if (endpointToken != null && !endpointToken.equals("")) {
             headers["X-RiseCue-Token"] = endpointToken;
         }
