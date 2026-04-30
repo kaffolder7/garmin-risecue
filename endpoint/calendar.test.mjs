@@ -266,6 +266,7 @@ test('privacy policy renders configured contact and Garmin disclosure', () => {
 
   assert.match(html, /RiseCue Privacy Policy/);
   assert.match(html, /mailto:privacy%40example.com/);
+  assert.match(html, /<link rel="icon" type="image\/png" href="\/favicon\.png">/);
   assert.match(html, /public RiseCue service at/);
   assert.match(html, /https:\/\/risecue\.affolder\.dev\/next-morning-event/);
   assert.match(html, /X-RiseCue-Calendar-Url/);
@@ -300,6 +301,11 @@ test('endpoint token protects next-morning-event when configured', async () => {
     assert.equal(privacy.status, 200);
     assert.match(privacy.headers.get('content-type'), /text\/html/);
     assert.match(await privacy.text(), /RiseCue Privacy Policy/);
+
+    const favicon = await fetch(`http://127.0.0.1:${port}/favicon.png`);
+    assert.equal(favicon.status, 200);
+    assert.match(favicon.headers.get('content-type'), /image\/png/);
+    assert.ok((await favicon.arrayBuffer()).byteLength > 0);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

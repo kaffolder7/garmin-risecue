@@ -10,6 +10,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY endpoint ./endpoint
+COPY resources/drawables/launcher_icon.png ./resources/drawables/launcher_icon.png
 
 EXPOSE 8787
 

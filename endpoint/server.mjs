@@ -1,5 +1,6 @@
 import http from 'node:http';
 import net from 'node:net';
+import { readFile } from 'node:fs/promises';
 import { URL } from 'node:url';
 import icalImport from 'node-ical';
 
@@ -13,6 +14,8 @@ const DEFAULT_PRIVACY_EFFECTIVE_DATE = 'April 28, 2026';
 const DEFAULT_PRIVACY_APP_NAME = 'RiseCue';
 const DEFAULT_PUBLIC_ENDPOINT_ORIGIN = 'https://risecue.affolder.dev';
 const PUBLIC_CALENDAR_ENDPOINT_PATH = '/next-morning-event';
+const FAVICON_PATH = '/favicon.png';
+const APP_ICON_URL = new URL('../resources/drawables/launcher_icon.png', import.meta.url);
 export const REQUEST_CALENDAR_URL_HEADER = 'x-risecue-calendar-url';
 const REQUEST_CALENDAR_URL_HEADER_DISPLAY = 'X-RiseCue-Calendar-Url';
 
@@ -478,6 +481,7 @@ export function renderPrivacyPolicyHtml({
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${safeAppName} Privacy Policy</title>
+  <link rel="icon" type="image/png" href="${FAVICON_PATH}">
   <style>
     :root {
       color-scheme: light dark;
@@ -583,6 +587,24 @@ function htmlResponse(res, statusCode, body) {
   res.end(body);
 }
 
+async function faviconResponse(res) {
+  try {
+    const body = await readFile(APP_ICON_URL);
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Content-Length': body.length,
+      'Cache-Control': 'public, max-age=86400'
+    });
+    res.end(body);
+  } catch {
+    res.writeHead(404, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-store'
+    });
+    res.end('favicon not found');
+  }
+}
+
 export function createServer({
   icsUrl = process.env.CALENDAR_ICS_URL,
   defaultTimeZone = process.env.CALENDAR_TIME_ZONE || DEFAULT_TIME_ZONE,
@@ -598,6 +620,11 @@ export function createServer({
 
     if (requestUrl.pathname === '/health') {
       jsonResponse(res, 200, { ok: true });
+      return;
+    }
+
+    if (requestUrl.pathname === FAVICON_PATH) {
+      await faviconResponse(res);
       return;
     }
 

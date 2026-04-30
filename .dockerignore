@@ -5,8 +5,10 @@ bin
 developer_key.der
 node_modules
 resources
+!resources/
+!resources/drawables/
+!resources/drawables/launcher_icon.png
 scripts
 source
 *.iq
 *.prg
-
