@@ -455,6 +455,53 @@ test('endpoint uses request calendar header when dynamic URLs are enabled', asyn
   });
 });
 
+test('endpoint forwards valid now and timeZone query parameters', async () => {
+  await withTestServer({
+    icsUrl: 'https://env.example/calendar.ics',
+    defaultTimeZone: 'America/New_York'
+  }, async ({ port, seenRequests }) => {
+    const query = new URLSearchParams({
+      now: '2026-04-27T22:00:00Z',
+      timeZone: 'UTC'
+    });
+    const response = await fetch(`http://127.0.0.1:${port}/next-morning-event?${query}`);
+
+    assert.equal(response.status, 200);
+    assert.equal(seenRequests[0].now.toISOString(), '2026-04-27T22:00:00.000Z');
+    assert.equal(seenRequests[0].timeZone, 'UTC');
+  });
+});
+
+test('endpoint rejects invalid now query parameter before fetching', async () => {
+  await withTestServer({
+    icsUrl: 'https://env.example/calendar.ics'
+  }, async ({ port, seenRequests }) => {
+    const query = new URLSearchParams({ now: 'not-a-date' });
+    const response = await fetch(`http://127.0.0.1:${port}/next-morning-event?${query}`);
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.equal(body.error, 'invalid_now');
+    assert.equal(body.message, 'now query parameter must be a valid date/time');
+    assert.equal(seenRequests.length, 0);
+  });
+});
+
+test('endpoint rejects invalid timeZone query parameter before fetching', async () => {
+  await withTestServer({
+    icsUrl: 'https://env.example/calendar.ics'
+  }, async ({ port, seenRequests }) => {
+    const query = new URLSearchParams({ timeZone: 'Not/A_Zone' });
+    const response = await fetch(`http://127.0.0.1:${port}/next-morning-event?${query}`);
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.equal(body.error, 'invalid_time_zone');
+    assert.equal(body.message, 'timeZone query parameter must be a valid IANA time zone');
+    assert.equal(seenRequests.length, 0);
+  });
+});
+
 test('endpoint requires request calendar header when dynamic URLs are enabled without fallback', async () => {
   await withTestServer({
     icsUrl: '',

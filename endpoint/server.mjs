@@ -28,6 +28,15 @@ class CalendarUrlError extends Error {
   }
 }
 
+class RequestParameterError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.name = 'RequestParameterError';
+    this.code = code;
+    this.statusCode = 400;
+  }
+}
+
 export function parseBooleanFlag(value) {
   if (value === true) return true;
   if (typeof value !== 'string') return false;
@@ -178,6 +187,43 @@ export function parseClockMinutes(value, fallback) {
   if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return fallback;
 
   return hours * 60 + minutes;
+}
+
+function parseNowQueryParameter(searchParams) {
+  if (!searchParams.has('now')) {
+    return new Date();
+  }
+
+  const now = new Date(searchParams.get('now'));
+  if (!Number.isFinite(now.getTime())) {
+    throw new RequestParameterError(
+      'invalid_now',
+      'now query parameter must be a valid date/time'
+    );
+  }
+
+  return now;
+}
+
+function resolveTimeZoneQueryParameter(value, fallback) {
+  if (!value) {
+    return fallback;
+  }
+
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value }).format(new Date(0));
+  } catch (error) {
+    if (error instanceof RangeError) {
+      throw new RequestParameterError(
+        'invalid_time_zone',
+        'timeZone query parameter must be a valid IANA time zone'
+      );
+    }
+
+    throw error;
+  }
+
+  return value;
 }
 
 export function getZonedParts(date, timeZone) {
@@ -652,15 +698,18 @@ export function createServer({
 
       const payload = await nextMorningEventHandler({
         icsUrl: resolvedIcsUrl,
-        now: requestUrl.searchParams.has('now') ? new Date(requestUrl.searchParams.get('now')) : new Date(),
-        timeZone: requestUrl.searchParams.get('timeZone') || defaultTimeZone,
+        now: parseNowQueryParameter(requestUrl.searchParams),
+        timeZone: resolveTimeZoneQueryParameter(
+          requestUrl.searchParams.get('timeZone'),
+          defaultTimeZone
+        ),
         windowStart: requestUrl.searchParams.get('windowStart') || DEFAULT_WINDOW_START,
         windowEnd: requestUrl.searchParams.get('windowEnd') || DEFAULT_WINDOW_END
       });
 
       jsonResponse(res, 200, payload);
     } catch (error) {
-      if (error instanceof CalendarUrlError) {
+      if (error instanceof CalendarUrlError || error instanceof RequestParameterError) {
         jsonResponse(res, error.statusCode, {
           error: error.code,
           message: error.message
