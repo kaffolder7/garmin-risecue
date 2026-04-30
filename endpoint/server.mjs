@@ -507,6 +507,578 @@ function normalizePublicEndpointOrigin(value) {
   return normalized || DEFAULT_PUBLIC_ENDPOINT_ORIGIN;
 }
 
+export function renderHowToHtml({
+  appName = process.env.PRIVACY_APP_NAME || DEFAULT_PRIVACY_APP_NAME,
+  publicEndpointOrigin = process.env.PRIVACY_PUBLIC_ENDPOINT_ORIGIN || DEFAULT_PUBLIC_ENDPOINT_ORIGIN
+} = {}) {
+  const safeAppName = escapeHtml(appName);
+  const publicOrigin = normalizePublicEndpointOrigin(publicEndpointOrigin);
+  const publicEndpointUrl = `${publicOrigin}${PUBLIC_CALENDAR_ENDPOINT_PATH}`;
+  const safePublicEndpointUrl = escapeHtml(publicEndpointUrl);
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${safeAppName} Setup Guide</title>
+  <link rel="icon" type="image/png" href="${FAVICON_PATH}">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --color-bg: #f4f7f6;
+      --color-surface: #ffffff;
+      --color-panel: #e9eef1;
+      --color-text: #1d2521;
+      --color-muted: #5f6d68;
+      --color-primary: #1f5b49;
+      --color-primary-strong: #154537;
+      --color-accent: #b85f2f;
+      --color-border: #d6dedb;
+      --color-code: #edf5f1;
+      --shadow-sm: 0 10px 24px rgba(37, 49, 43, 0.08);
+      --shadow-md: 0 18px 48px rgba(37, 49, 43, 0.13);
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 18px;
+      --space-lg: 28px;
+      --space-xl: 44px;
+      --font-display: Charter, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      --font-body: "Avenir Next", "Trebuchet MS", Verdana, sans-serif;
+      font-family: var(--font-body);
+      line-height: 1.55;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #101613;
+        --color-surface: #18201c;
+        --color-panel: #202a25;
+        --color-text: #eef2ec;
+        --color-muted: #b5c0b9;
+        --color-primary: #a8dcc0;
+        --color-primary-strong: #d0f2df;
+        --color-accent: #f1a26d;
+        --color-border: #34423b;
+        --color-code: #243129;
+        --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.24);
+        --shadow-md: 0 18px 48px rgba(0, 0, 0, 0.32);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    a {
+      color: var(--color-primary-strong);
+      font-weight: 700;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    code {
+      overflow-wrap: anywhere;
+      border-radius: 6px;
+      background: var(--color-code);
+      padding: 2px 6px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 40px 0 72px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
+      gap: var(--space-xl);
+      align-items: center;
+      padding: 16px 0 38px;
+    }
+
+    .eyebrow {
+      margin: 0 0 var(--space-sm);
+      color: var(--color-accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: var(--font-display);
+      line-height: 1.08;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-size: 4.5rem;
+      font-weight: 700;
+    }
+
+    h2 {
+      margin: 0 0 var(--space-md);
+      font-size: 2.25rem;
+    }
+
+    h3 {
+      margin: 0 0 var(--space-xs);
+      font-size: 1.35rem;
+    }
+
+    p {
+      margin: 0 0 var(--space-md);
+    }
+
+    .lede {
+      max-width: 700px;
+      margin-top: var(--space-lg);
+      color: var(--color-muted);
+      font-size: 1.16rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin-top: var(--space-lg);
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      border: 1px solid var(--color-primary);
+      border-radius: 8px;
+      background: var(--color-primary);
+      color: var(--color-surface);
+      padding: 10px 16px;
+      text-decoration: none;
+    }
+
+    .button.secondary {
+      background: transparent;
+      color: var(--color-primary-strong);
+    }
+
+    .quick-panel,
+    .callout,
+    .advanced,
+    .troubleshooting {
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: var(--color-surface);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .quick-panel {
+      padding: var(--space-lg);
+    }
+
+    .quick-panel h2 {
+      font-size: 1.55rem;
+    }
+
+    .setting-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .setting-list li {
+      display: grid;
+      grid-template-columns: minmax(140px, 0.35fr) minmax(0, 0.65fr);
+      gap: var(--space-md);
+      border-top: 1px solid var(--color-border);
+      padding-top: 12px;
+    }
+
+    .setting-list li:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .label {
+      color: var(--color-muted);
+      font-size: 0.9rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .steps {
+      display: grid;
+      gap: var(--space-lg);
+      margin-top: var(--space-xl);
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: minmax(0, 0.62fr) minmax(260px, 0.38fr);
+      gap: var(--space-lg);
+      align-items: stretch;
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-lg);
+    }
+
+    .step-number {
+      display: inline-flex;
+      width: 34px;
+      height: 34px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-sm);
+      border: 1px solid var(--color-primary);
+      border-radius: 50%;
+      color: var(--color-primary-strong);
+      font-weight: 900;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin: var(--space-md) 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist li {
+      position: relative;
+      padding-left: 24px;
+    }
+
+    .checklist li::before {
+      position: absolute;
+      left: 0;
+      color: var(--color-accent);
+      content: "OK";
+      font-size: 0.72rem;
+      font-weight: 900;
+    }
+
+    .screenshot-frame {
+      margin: 0;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: var(--color-panel);
+      padding: 14px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .phone-placeholder {
+      min-height: 340px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: var(--color-surface);
+      padding: 18px;
+    }
+
+    .screen-bar,
+    .screen-line,
+    .screen-field {
+      border-radius: 6px;
+      background: var(--color-panel);
+    }
+
+    .screen-bar {
+      width: 42%;
+      height: 12px;
+      margin: 0 auto 20px;
+    }
+
+    .screen-line {
+      height: 10px;
+      margin-bottom: 12px;
+    }
+
+    .screen-line.short {
+      width: 62%;
+    }
+
+    .screen-field {
+      display: flex;
+      min-height: 58px;
+      align-items: center;
+      margin: 18px 0;
+      border: 1px dashed var(--color-accent);
+      padding: 12px;
+      color: var(--color-muted);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    figcaption {
+      margin-top: 10px;
+      color: var(--color-muted);
+      font-size: 0.9rem;
+    }
+
+    .callout {
+      margin: var(--space-xl) 0;
+      padding: var(--space-lg);
+      border-left: 6px solid var(--color-accent);
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+
+    .mini-panel {
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-md);
+    }
+
+    .mini-panel p {
+      color: var(--color-muted);
+    }
+
+    .advanced,
+    .troubleshooting {
+      margin-top: var(--space-xl);
+      padding: var(--space-lg);
+    }
+
+    details summary {
+      cursor: pointer;
+      color: var(--color-primary-strong);
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .trouble-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+
+    .trouble-grid div {
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-md);
+    }
+
+    .footer {
+      margin-top: var(--space-xl);
+      color: var(--color-muted);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 780px) {
+      .hero,
+      .step,
+      .settings-grid,
+      .trouble-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .setting-list li {
+        grid-template-columns: 1fr;
+        gap: var(--space-xs);
+      }
+
+      h1 {
+        font-size: 2.75rem;
+      }
+
+      h2 {
+        font-size: 1.85rem;
+      }
+
+      .lede {
+        font-size: 1.05rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">RiseCue setup</p>
+        <h1 id="page-title">Set up ${safeAppName} in Garmin Connect</h1>
+        <p class="lede">${safeAppName} checks your calendar and optional sunrise time, then schedules a wake notification on your watch. It does not create or change Garmin native alarms.</p>
+        <div class="actions">
+          <a class="button" href="#setup-steps">Start setup</a>
+          <a class="button secondary" href="/privacy">Read privacy policy</a>
+        </div>
+      </div>
+      <figure class="screenshot-frame screenshot-placeholder">
+        <div class="phone-placeholder" role="img" aria-label="Placeholder screenshot: Garmin app settings screen">
+          <div class="screen-bar"></div>
+          <div class="screen-line"></div>
+          <div class="screen-line short"></div>
+          <div class="screen-field">Garmin app settings screen</div>
+          <div class="screen-line"></div>
+          <div class="screen-line short"></div>
+        </div>
+        <figcaption>Placeholder screenshot: Garmin app settings screen.</figcaption>
+      </figure>
+    </section>
+
+    <section class="quick-panel" aria-labelledby="quick-values-title">
+      <h2 id="quick-values-title">Use these public endpoint settings</h2>
+      <ul class="setting-list">
+        <li>
+          <span class="label">Calendar endpoint URL</span>
+          <span>Keep the default value: <code>${safePublicEndpointUrl}</code></span>
+        </li>
+        <li>
+          <span class="label">Calendar ICS URL</span>
+          <span>Paste your private HTTPS <code>.ics</code> calendar link.</span>
+        </li>
+        <li>
+          <span class="label">Calendar endpoint token</span>
+          <span>Leave blank for public builds. The public app includes the built-in endpoint token automatically.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section id="setup-steps" class="steps" aria-labelledby="steps-title">
+      <h2 id="steps-title">Setup steps</h2>
+
+      <article class="step">
+        <div>
+          <span class="step-number">1</span>
+          <h3>Open the app settings</h3>
+          <p>In Garmin Connect or Connect IQ, open ${safeAppName}, then open App Settings. Keep <strong>Enable wake alerts</strong> turned on.</p>
+          <ul class="checklist">
+            <li>The app needs Background, Communications, and Notifications permissions.</li>
+            <li>Your watch must be paired and able to sync settings from your phone.</li>
+          </ul>
+        </div>
+        <figure class="screenshot-frame screenshot-placeholder">
+          <div class="phone-placeholder" role="img" aria-label="Placeholder screenshot: Garmin Connect app settings screen">
+            <div class="screen-bar"></div>
+            <div class="screen-field">App Settings</div>
+            <div class="screen-line"></div>
+            <div class="screen-line short"></div>
+          </div>
+          <figcaption>Placeholder screenshot: Garmin Connect app settings screen.</figcaption>
+        </figure>
+      </article>
+
+      <article class="step">
+        <div>
+          <span class="step-number">2</span>
+          <h3>Add your calendar link</h3>
+          <p>Paste a private HTTPS calendar feed into <strong>Calendar ICS URL</strong>. Google Calendar, Apple iCloud Calendar, Outlook, and many calendar tools can publish private <code>.ics</code> links.</p>
+          <ul class="checklist">
+            <li>Use the private address, not a public webpage link.</li>
+            <li>Keep the link private because anyone with it may be able to read that calendar feed.</li>
+          </ul>
+        </div>
+        <figure class="screenshot-frame screenshot-placeholder">
+          <div class="phone-placeholder" role="img" aria-label="Placeholder screenshot: Calendar ICS URL field">
+            <div class="screen-bar"></div>
+            <div class="screen-line"></div>
+            <div class="screen-field">Calendar ICS URL field</div>
+            <div class="screen-line short"></div>
+          </div>
+          <figcaption>Placeholder screenshot: Calendar ICS URL field.</figcaption>
+        </figure>
+      </article>
+
+      <article class="step">
+        <div>
+          <span class="step-number">3</span>
+          <h3>Choose timing</h3>
+          <p>Choose your <strong>Calendar time zone</strong>, set the <strong>Morning window start</strong> and <strong>Morning window end</strong>, then decide when RiseCue should check for tomorrow's wake target.</p>
+          <ul class="checklist">
+            <li>Leave <strong>Manual workflow time</strong> blank to use the watch's configured Sleep Time.</li>
+            <li>Enter a 24-hour time such as <code>21:30</code> if you want RiseCue to check at a fixed watch-local time.</li>
+            <li>Use <strong>Minutes before event</strong> and <strong>Extra buffer minutes</strong> to move the alert earlier.</li>
+          </ul>
+        </div>
+        <figure class="screenshot-frame screenshot-placeholder">
+          <div class="phone-placeholder" role="img" aria-label="Placeholder screenshot: time and alert settings">
+            <div class="screen-bar"></div>
+            <div class="screen-field">Calendar time zone</div>
+            <div class="screen-field">Manual workflow time</div>
+            <div class="screen-line short"></div>
+          </div>
+          <figcaption>Placeholder screenshot: time and alert settings.</figcaption>
+        </figure>
+      </article>
+    </section>
+
+    <section class="callout" aria-labelledby="public-token-title">
+      <h2 id="public-token-title">Public app token setting</h2>
+      <p>For the built-in public endpoint, leave <strong>Calendar endpoint token</strong> blank. Public RiseCue builds send the developer-managed token automatically only when the endpoint URL is <code>${safePublicEndpointUrl}</code>.</p>
+    </section>
+
+    <section aria-labelledby="optional-title">
+      <h2 id="optional-title">Optional settings</h2>
+      <div class="settings-grid">
+        <div class="mini-panel">
+          <h3>Sunrise alerts</h3>
+          <p>Turn on <strong>Enable sunrise alerts</strong>, then enter decimal latitude and longitude. Sunrise is calculated on the watch and is not sent to the calendar endpoint.</p>
+        </div>
+        <div class="mini-panel">
+          <h3>Alert feel</h3>
+          <p>Set <strong>Snooze minutes</strong>, <strong>Alert mode</strong>, <strong>Tone style</strong>, and <strong>Vibration style</strong> to match how forceful the wake alert should be.</p>
+        </div>
+        <div class="mini-panel">
+          <h3>Notification body</h3>
+          <p>Use <code>{eventTitle}</code> and <code>{eventStartLocal}</code> in the notification body template.</p>
+        </div>
+        <div class="mini-panel">
+          <h3>Morning window</h3>
+          <p>RiseCue looks for timed events inside the morning window and ignores all-day events.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="advanced" aria-labelledby="advanced-title">
+      <details>
+        <summary id="advanced-title">Custom or self-hosted endpoint</summary>
+        <p>Use this only when you run your own RiseCue-compatible endpoint. Set <strong>Calendar endpoint URL</strong> to your hosted <code>/next-morning-event</code> URL, set <strong>Calendar endpoint token</strong> to the token your service expects, and set <strong>Calendar ICS URL</strong> only when your endpoint allows request-supplied calendar URLs.</p>
+        <p>If your endpoint already has <code>CALENDAR_ICS_URL</code> configured on the server, leave <strong>Calendar ICS URL</strong> blank in Garmin app settings.</p>
+      </details>
+    </section>
+
+    <section class="troubleshooting" aria-labelledby="troubleshooting-title">
+      <h2 id="troubleshooting-title">Troubleshooting</h2>
+      <div class="trouble-grid">
+        <div>
+          <h3>Missing calendar URL</h3>
+          <p>Confirm <strong>Calendar ICS URL</strong> is filled in when using the public endpoint, then sync settings to the watch.</p>
+        </div>
+        <div>
+          <h3>Invalid endpoint or token</h3>
+          <p>For the public app, keep the default endpoint URL and leave the token blank. Custom endpoints need their own matching token.</p>
+        </div>
+        <div>
+          <h3>Sunrise says setup</h3>
+          <p>Turn on sunrise alerts and enter both latitude and longitude as decimal degrees.</p>
+        </div>
+        <div>
+          <h3>No wake target found</h3>
+          <p>Check that tomorrow has a timed event inside the morning window, or enable sunrise alerts as a fallback target.</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer">Need the privacy details? Read the <a href="/privacy">${safeAppName} Privacy Policy</a>.</p>
+  </main>
+</body>
+</html>`;
+}
+
 export function renderPrivacyPolicyHtml({
   appName = process.env.PRIVACY_APP_NAME || DEFAULT_PRIVACY_APP_NAME,
   contactEmail = process.env.PRIVACY_CONTACT_EMAIL || '',
@@ -657,7 +1229,8 @@ export function createServer({
   endpointToken = process.env.ENDPOINT_TOKEN || '',
   allowRequestCalendarUrl = process.env.ALLOW_REQUEST_CALENDAR_URL,
   nextMorningEventHandler = nextMorningEvent,
-  privacyPolicyOptions
+  privacyPolicyOptions,
+  howToOptions
 } = {}) {
   const requestCalendarUrlsAllowed = parseBooleanFlag(allowRequestCalendarUrl);
 
@@ -676,6 +1249,11 @@ export function createServer({
 
     if (requestUrl.pathname === '/privacy' || requestUrl.pathname === '/privacy/') {
       htmlResponse(res, 200, renderPrivacyPolicyHtml(privacyPolicyOptions));
+      return;
+    }
+
+    if (requestUrl.pathname === '/how-to' || requestUrl.pathname === '/how-to/') {
+      htmlResponse(res, 200, renderHowToHtml(howToOptions));
       return;
     }
 

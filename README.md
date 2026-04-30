@@ -71,14 +71,15 @@ Your local `.env` may contain both values when you run the endpoint locally and
 also build public watch binaries, but deployed endpoint services only read
 `ENDPOINT_TOKEN`.
 
-The same server also exposes a health check and public privacy policy at:
+The same server also exposes a health check, setup guide, and public privacy policy at:
 
 ```text
 https://public-host.example.com/health
+https://public-host.example.com/how-to
 https://public-host.example.com/privacy
 ```
 
-Set `PRIVACY_CONTACT_EMAIL`, `PRIVACY_PUBLIC_ENDPOINT_ORIGIN`, and optionally `PRIVACY_EFFECTIVE_DATE` before publishing so the policy has current contact details and the right public service URL. The `/health` and `/privacy` pages are intentionally not protected by `ENDPOINT_TOKEN`.
+Set `PRIVACY_CONTACT_EMAIL`, `PRIVACY_PUBLIC_ENDPOINT_ORIGIN`, and optionally `PRIVACY_EFFECTIVE_DATE` before publishing so the policy has current contact details and the right public service URL. The setup guide also uses `PRIVACY_PUBLIC_ENDPOINT_ORIGIN` when showing the public calendar endpoint URL. The `/health`, `/how-to`, and `/privacy` pages are intentionally not protected by `ENDPOINT_TOKEN`.
 
 Watch setting value example:
 
@@ -358,6 +359,7 @@ For the listing, be explicit:
 - It requires the Background, Communications, and Notifications permissions.
 - It requires a hosted calendar endpoint.
 - Calendar data is processed by either a free, public (and private) endpoint or you may self-host your own calendar event-processing endpoint.
+- Include the setup guide URL (e.g. `https://risecue.affolder.dev/how-to` for the built-in endpoint or your own `/how-to` URL when self-hosting) as the recommended support/setup page.
 - Include the privacy policy URL (e.g. `https://risecue.affolder.dev/privacy` for the built-in endpoint or your own `/privacy` URL when self-hosting), since private ICS URLs, event titles, and event times may pass through a public server endpoint.
 
 ## App Settings

@@ -10,6 +10,7 @@ import {
   parseClockMinutes,
   REQUEST_CALENDAR_URL_HEADER,
   validateRequestCalendarUrl,
+  renderHowToHtml,
   renderPrivacyPolicyHtml,
   tomorrowWindow
 } from './server.mjs';
@@ -278,6 +279,26 @@ test('privacy policy renders configured contact and Garmin disclosure', () => {
   assert.doesNotMatch(html, /endpoint operator/i);
 });
 
+test('how-to page renders public setup guidance and placeholders', () => {
+  const html = renderHowToHtml({
+    appName: 'RiseCue',
+    publicEndpointOrigin: 'https://risecue.affolder.dev'
+  });
+
+  assert.match(html, /RiseCue Setup Guide/);
+  assert.match(html, /Set up RiseCue in Garmin Connect/);
+  assert.match(html, /wake notification/);
+  assert.match(html, /does not create or change Garmin native alarms/);
+  assert.match(html, /https:\/\/risecue\.affolder\.dev\/next-morning-event/);
+  assert.match(html, /Calendar ICS URL/);
+  assert.match(html, /Leave blank for public builds/);
+  assert.match(html, /screenshot-placeholder/);
+  assert.match(html, /Placeholder screenshot: Garmin app settings screen/);
+  assert.match(html, /Placeholder screenshot: Calendar ICS URL field/);
+  assert.match(html, /Custom or self-hosted endpoint/);
+  assert.match(html, /CALENDAR_ICS_URL/);
+});
+
 test('endpoint token protects next-morning-event when configured', async () => {
   const server = createServer({
     icsUrl: 'https://example.com/calendar.ics',
@@ -301,6 +322,16 @@ test('endpoint token protects next-morning-event when configured', async () => {
     assert.equal(privacy.status, 200);
     assert.match(privacy.headers.get('content-type'), /text\/html/);
     assert.match(await privacy.text(), /RiseCue Privacy Policy/);
+
+    const howTo = await fetch(`http://127.0.0.1:${port}/how-to`);
+    assert.equal(howTo.status, 200);
+    assert.match(howTo.headers.get('content-type'), /text\/html/);
+    assert.match(await howTo.text(), /RiseCue Setup Guide/);
+
+    const howToSlash = await fetch(`http://127.0.0.1:${port}/how-to/`);
+    assert.equal(howToSlash.status, 200);
+    assert.match(howToSlash.headers.get('content-type'), /text\/html/);
+    assert.match(await howToSlash.text(), /RiseCue Setup Guide/);
 
     const favicon = await fetch(`http://127.0.0.1:${port}/favicon.png`);
     assert.equal(favicon.status, 200);
