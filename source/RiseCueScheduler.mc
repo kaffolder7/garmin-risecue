@@ -8,6 +8,7 @@ using Toybox.Time;
 using Toybox.Time.Gregorian;
 using Toybox.Weather;
 
+(:background)
 module RiseCueScheduler {
     const MIN_TEMPORAL_DELAY_SECONDS = 300;
     const MAX_PATTERN_STEPS = 8;

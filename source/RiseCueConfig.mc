@@ -1,5 +1,6 @@
 using Toybox.Application.Properties;
 
+(:background)
 module RiseCueConfig {
     const PROP_ENABLED = "enabled";
     const PROP_ENDPOINT_URL = "endpointUrl";

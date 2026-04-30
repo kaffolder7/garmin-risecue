@@ -1,3 +1,4 @@
+(:background)
 module RiseCueBuildConfig {
     (:defaultPublicEndpointToken)
     function getPublicEndpointToken() {
