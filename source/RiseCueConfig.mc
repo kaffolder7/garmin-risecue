@@ -67,6 +67,10 @@ module RiseCueConfig {
     const STORAGE_LAST_EVENT_TITLE = "lastEventTitle";
     const STORAGE_LAST_EVENT_START = "lastEventStart";
     const STORAGE_LAST_ALERT_EPOCH = "lastAlertEpoch";
+    const STORAGE_PREVIEW_EVENT_TITLE = "previewEventTitle";
+    const STORAGE_PREVIEW_EVENT_START = "previewEventStart";
+    const STORAGE_PREVIEW_ALERT_EPOCH = "previewAlertEpoch";
+    const STORAGE_PREVIEW_CHECKED_AT = "previewCheckedAt";
     const STORAGE_WORKFLOW_TRIGGER_EPOCH = "workflowTriggerEpoch";
     const STORAGE_TEMPORAL_EVENT_PURPOSE = "temporalEventPurpose";
 

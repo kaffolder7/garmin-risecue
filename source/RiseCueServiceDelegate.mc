@@ -41,6 +41,7 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
 
     function runWakeWorkflow() {
         RiseCueScheduler.registerWorkflowTriggers();
+        RiseCueScheduler.clearPreviewState();
 
         if (!RiseCueConfig.isEnabled()) {
             RiseCueScheduler.storeStatus("Wake alerts disabled");
@@ -58,37 +59,14 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
             return;
         }
 
-        var params = {
-            "windowStart" => RiseCueConfig.getMorningStart(),
-            "windowEnd" => RiseCueConfig.getMorningEnd()
-        };
-        var timeZone = RiseCueConfig.getTimeZone();
-        if (timeZone != null && !timeZone.equals("")) {
-            params["timeZone"] = timeZone;
-        }
-
-        var headers = {
-            "Accept" => "application/json"
-        };
-        var calendarIcsUrl = RiseCueConfig.getCalendarIcsUrl();
-        if (calendarIcsUrl != null && !calendarIcsUrl.equals("")) {
-            headers["X-RiseCue-Calendar-Url"] = calendarIcsUrl;
-        }
-
-        var endpointToken = RiseCueConfig.getEndpointTokenForEndpoint(endpoint);
-        if (endpointToken != null && !endpointToken.equals("")) {
-            headers["X-RiseCue-Token"] = endpointToken;
-        }
-
-        var options = {
-            :method => Communications.HTTP_REQUEST_METHOD_GET,
-            :headers => headers,
-            :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
-        };
-
         try {
             RiseCueScheduler.storeStatus("Checking calendar");
-            Communications.makeWebRequest(endpoint, params, options, method(:onCalendarResponse));
+            Communications.makeWebRequest(
+                endpoint,
+                RiseCueWorkflow.buildCalendarParams(),
+                RiseCueWorkflow.buildCalendarOptions(endpoint),
+                method(:onCalendarResponse)
+            );
         } catch (ex) {
             finishWithTarget(null, "Calendar request failed", "request_start_failed", true);
         }
@@ -101,51 +79,23 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
         }
 
         var response = data as Lang.Dictionary;
-        if (response.get("hasEvent") != true) {
+        if (!RiseCueWorkflow.hasCalendarEvent(response)) {
             finishWithTarget(null, "No morning events found", "no_event", false);
             return;
         }
 
-        var eventTargetEpoch = response.get("eventTargetEpochSec");
-        if (eventTargetEpoch == null) {
-            eventTargetEpoch = response.get("eventStartEpochSec");
-        }
-
-        if (eventTargetEpoch == null) {
+        var calendarTarget = RiseCueWorkflow.makeCalendarTarget(response);
+        if (calendarTarget == null) {
             finishWithTarget(null, "Calendar response missing event time", "invalid_response", true);
             return;
         }
-
-        var eventTitle = "Calendar event";
-        var eventStartLocal = "";
-        var responseTitle = response.get("eventTitle");
-        var responseTargetLocal = response.get("eventTargetLocal");
-        var responseTargetDisplay = response.get("eventTargetDisplay");
-        var responseStartLocal = response.get("eventStartLocal");
-        var responseStartDisplay = response.get("eventStartDisplay");
-
-        if (responseTitle != null) {
-            eventTitle = responseTitle.toString();
-        }
-
-        if (responseTargetDisplay != null) {
-            eventStartLocal = responseTargetDisplay.toString();
-        } else if (responseTargetLocal != null) {
-            eventStartLocal = responseTargetLocal.toString();
-        } else if (responseStartDisplay != null) {
-            eventStartLocal = responseStartDisplay.toString();
-        } else if (responseStartLocal != null) {
-            eventStartLocal = responseStartLocal.toString();
-        }
-
-        var calendarTarget = RiseCueScheduler.makeWakeTarget(eventTitle, eventTargetEpoch, eventStartLocal);
         finishWithTarget(calendarTarget, "No wake target found", "no_target", false);
     }
 
     function finishWithTarget(calendarTarget, noTargetStatus, noTargetExitStatus, notifyWhenNoTarget) {
         var target = RiseCueScheduler.chooseEarlierWakeTarget(calendarTarget, _sunriseTarget);
         if (target == null) {
-            var status = mergeSunriseStatus(noTargetStatus);
+            var status = RiseCueWorkflow.mergeStatus(noTargetStatus, _sunriseStatus);
             RiseCueScheduler.storeStatus(status);
             if (notifyWhenNoTarget) {
                 RiseCueScheduler.showStatusNotification("RiseCue", status + ".");
@@ -162,18 +112,5 @@ class RiseCueServiceDelegate extends System.ServiceDelegate {
         }
 
         Background.exit({ "status" => "scheduled" });
-    }
-
-    function mergeSunriseStatus(status) {
-        if (_sunriseStatus == null) {
-            return status;
-        }
-
-        var sunriseStatus = _sunriseStatus.toString();
-        if (sunriseStatus.equals("")) {
-            return status;
-        }
-
-        return status + "; " + sunriseStatus;
     }
 }

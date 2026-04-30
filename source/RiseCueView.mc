@@ -276,6 +276,10 @@ class RiseCueView extends WatchUi.View {
             return "Wake alert ready";
         } else if (status.equals("Wake alert scheduled")) {
             return "Wake alert ready";
+        } else if (status.equals("Wake target previewed")) {
+            return "Preview ready";
+        } else if (status.equals("Could not store wake preview")) {
+            return "Preview failed";
         } else if (status.equals("Alert time is too soon or has passed")) {
             return "Alert time passed";
         } else if (status.equals("Could not schedule wake alert")) {

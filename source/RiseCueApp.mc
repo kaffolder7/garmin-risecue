@@ -15,6 +15,7 @@ class RiseCueApp extends Application.AppBase {
     }
 
     function onSettingsChanged() {
+        RiseCueScheduler.clearPreviewState();
         RiseCueScheduler.registerWorkflowTriggers();
         WatchUi.requestUpdate();
     }

@@ -155,6 +155,11 @@ module RiseCueScheduler {
         return parts == null ? null : formatClockTime(parts);
     }
 
+    function hasInvalidManualWorkflowTime() {
+        var manualTime = RiseCueConfig.getManualWorkflowTime();
+        return manualTime != null && !manualTime.equals("") && parseClockTime(manualTime) == null;
+    }
+
     function parseClockTime(value) {
         if (value == null || value.equals("")) {
             return null;
@@ -243,6 +248,18 @@ module RiseCueScheduler {
         };
     }
 
+    function getWakeTargetTitle(target) {
+        return target == null ? null : target.get(WAKE_TARGET_TITLE);
+    }
+
+    function getWakeTargetEpoch(target) {
+        return target == null ? null : target.get(WAKE_TARGET_EPOCH);
+    }
+
+    function getWakeTargetDisplay(target) {
+        return target == null ? null : target.get(WAKE_TARGET_DISPLAY);
+    }
+
     function chooseEarlierWakeTarget(firstTarget, secondTarget) {
         if (firstTarget == null) {
             return secondTarget;
@@ -299,10 +316,75 @@ module RiseCueScheduler {
             } catch (ex) {
             }
             setTemporalEventPurpose(RiseCueConfig.TEMPORAL_PURPOSE_ALERT);
+            clearPreviewState();
             storeStatus("Wake alert scheduled");
         }
 
         return scheduled;
+    }
+
+    function shouldQueueManualRefresh(target) {
+        var manualTime = RiseCueConfig.getManualWorkflowTime();
+        var manualParts = parseClockTime(manualTime);
+        if (manualTime == null || manualTime.equals("") || manualParts == null) {
+            return true;
+        }
+
+        var currentPurpose = getTemporalEventPurpose();
+        if (currentPurpose != null && currentPurpose.equals(RiseCueConfig.TEMPORAL_PURPOSE_ALERT)) {
+            return true;
+        }
+
+        var targetEpoch = getWakeTargetEpoch(target);
+        if (targetEpoch == null) {
+            return true;
+        }
+
+        var alertEpoch = calculateAlertEpoch(targetEpoch);
+        var manualEpoch = calculateNextManualWorkflowEpoch(manualParts);
+        return manualEpoch > (alertEpoch - MIN_TEMPORAL_DELAY_SECONDS);
+    }
+
+    function storePreviewWakeTarget(target) {
+        var title = getWakeTargetTitle(target);
+        var epoch = getWakeTargetEpoch(target);
+        var display = getWakeTargetDisplay(target);
+
+        if (title == null || epoch == null) {
+            storeStatus("Wake target is invalid");
+            return false;
+        }
+
+        try {
+            Storage.setValue(RiseCueConfig.STORAGE_PREVIEW_EVENT_TITLE, title.toString());
+            Storage.setValue(RiseCueConfig.STORAGE_PREVIEW_EVENT_START, display == null ? "" : display.toString());
+            Storage.setValue(RiseCueConfig.STORAGE_PREVIEW_ALERT_EPOCH, calculateAlertEpoch(epoch));
+            Storage.setValue(RiseCueConfig.STORAGE_PREVIEW_CHECKED_AT, Time.now().value());
+            storeStatus("Wake target previewed");
+            return true;
+        } catch (ex) {
+            storeStatus("Could not store wake preview");
+            return false;
+        }
+    }
+
+    function clearPreviewState() {
+        try {
+            Storage.deleteValue(RiseCueConfig.STORAGE_PREVIEW_EVENT_TITLE);
+            Storage.deleteValue(RiseCueConfig.STORAGE_PREVIEW_EVENT_START);
+            Storage.deleteValue(RiseCueConfig.STORAGE_PREVIEW_ALERT_EPOCH);
+            Storage.deleteValue(RiseCueConfig.STORAGE_PREVIEW_CHECKED_AT);
+        } catch (ex) {
+        }
+    }
+
+    function clearQueuedAlertState() {
+        try {
+            Storage.deleteValue(RiseCueConfig.STORAGE_LAST_EVENT_TITLE);
+            Storage.deleteValue(RiseCueConfig.STORAGE_LAST_EVENT_START);
+            Storage.deleteValue(RiseCueConfig.STORAGE_LAST_ALERT_EPOCH);
+        } catch (ex) {
+        }
     }
 
     function createSunriseTargetResult() {
@@ -375,6 +457,11 @@ module RiseCueScheduler {
         );
         if (scheduled) {
             setTemporalEventPurpose(RiseCueConfig.TEMPORAL_PURPOSE_ALERT);
+            try {
+                Storage.setValue(RiseCueConfig.STORAGE_LAST_ALERT_EPOCH, snoozeEpoch);
+            } catch (ex) {
+            }
+            clearPreviewState();
             storeStatus("Snoozed wake alert");
         }
         return scheduled;
@@ -384,6 +471,7 @@ module RiseCueScheduler {
         var currentPurpose = getTemporalEventPurpose();
         if (currentPurpose == null
             || !currentPurpose.equals(RiseCueConfig.TEMPORAL_PURPOSE_ALERT)) {
+            clearQueuedAlertState();
             return;
         }
 
@@ -393,6 +481,7 @@ module RiseCueScheduler {
         }
 
         clearTemporalEventPurpose();
+        clearQueuedAlertState();
     }
 
     function registerTemporalEvent(epochSeconds, tooSoonStatus, failureStatus) {
@@ -436,6 +525,7 @@ module RiseCueScheduler {
         }
 
         runAttentionPattern();
+        clearQueuedAlertState();
         storeStatus("Wake alert fired");
     }
 

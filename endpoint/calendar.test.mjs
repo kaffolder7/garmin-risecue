@@ -555,6 +555,7 @@ test('endpoint rejects invalid dynamic calendar header before fetching', async (
 
 test('watch request includes configured calendar URL header only from the new setting', async () => {
   const serviceDelegate = await readFile(new URL('../source/RiseCueServiceDelegate.mc', import.meta.url), 'utf8');
+  const workflow = await readFile(new URL('../source/RiseCueWorkflow.mc', import.meta.url), 'utf8');
   const config = await readFile(new URL('../source/RiseCueConfig.mc', import.meta.url), 'utf8');
   const properties = await readFile(new URL('../resources/properties/properties.xml', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../resources/settings/settings.xml', import.meta.url), 'utf8');
@@ -562,17 +563,19 @@ test('watch request includes configured calendar URL header only from the new se
 
   assert.match(config, /PROP_CALENDAR_ICS_URL = "calendarIcsUrl"/);
   assert.match(config, /function getCalendarIcsUrl\(\)/);
-  assert.match(serviceDelegate, /RiseCueConfig\.getCalendarIcsUrl\(\)/);
-  assert.match(serviceDelegate, /headers\["X-RiseCue-Calendar-Url"\] = calendarIcsUrl/);
+  assert.match(serviceDelegate, /RiseCueWorkflow\.buildCalendarOptions\(endpoint\)/);
+  assert.match(workflow, /RiseCueConfig\.getCalendarIcsUrl\(\)/);
+  assert.match(workflow, /headers\["X-RiseCue-Calendar-Url"\] = calendarIcsUrl/);
   assert.match(properties, /<property id="calendarIcsUrl" type="string">/);
   assert.match(settings, /propertyKey="@Properties\.calendarIcsUrl"/);
   assert.match(strings, /<string id="SettingCalendarIcsUrlTitle">Calendar ICS URL<\/string>/);
-  assert.equal(serviceDelegate.includes('params["calendarUrl"]'), false);
+  assert.equal(workflow.includes('params["calendarUrl"]'), false);
   assert.equal(REQUEST_CALENDAR_URL_HEADER, 'x-risecue-calendar-url');
 });
 
 test('watch token selection uses compiled token only for the default public endpoint', async () => {
   const serviceDelegate = await readFile(new URL('../source/RiseCueServiceDelegate.mc', import.meta.url), 'utf8');
+  const workflow = await readFile(new URL('../source/RiseCueWorkflow.mc', import.meta.url), 'utf8');
   const config = await readFile(new URL('../source/RiseCueConfig.mc', import.meta.url), 'utf8');
   const buildConfig = await readFile(new URL('../source/RiseCueBuildConfig.mc', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../resources/settings/settings.xml', import.meta.url), 'utf8');
@@ -589,8 +592,9 @@ test('watch token selection uses compiled token only for the default public endp
   assert.match(config, /function getEndpointTokenForEndpoint\(endpoint\)/);
   assert.match(config, /RiseCueBuildConfig\.getPublicEndpointToken\(\)/);
   assert.match(config, /return getEndpointToken\(\)/);
-  assert.match(serviceDelegate, /RiseCueConfig\.getEndpointTokenForEndpoint\(endpoint\)/);
-  assert.match(serviceDelegate, /headers\["X-RiseCue-Token"\] = endpointToken/);
+  assert.match(serviceDelegate, /RiseCueWorkflow\.buildCalendarOptions\(endpoint\)/);
+  assert.match(workflow, /RiseCueConfig\.getEndpointTokenForEndpoint\(endpoint\)/);
+  assert.match(workflow, /headers\["X-RiseCue-Token"\] = endpointToken/);
   assert.equal(settings.includes('RISECUE_PUBLIC_ENDPOINT_TOKEN'), false);
   assert.equal(settings.includes('defaultPublicEndpointToken'), false);
 
@@ -606,10 +610,12 @@ test('watch token selection uses compiled token only for the default public endp
 
 test('watch response handling prefers calendar target fields with start fallback', async () => {
   const serviceDelegate = await readFile(new URL('../source/RiseCueServiceDelegate.mc', import.meta.url), 'utf8');
+  const workflow = await readFile(new URL('../source/RiseCueWorkflow.mc', import.meta.url), 'utf8');
 
-  assert.match(serviceDelegate, /response\.get\("eventTargetEpochSec"\)/);
-  assert.match(serviceDelegate, /eventTargetEpoch = response\.get\("eventStartEpochSec"\)/);
-  assert.match(serviceDelegate, /response\.get\("eventTargetDisplay"\)/);
-  assert.match(serviceDelegate, /response\.get\("eventTargetLocal"\)/);
-  assert.match(serviceDelegate, /RiseCueScheduler\.makeWakeTarget\(eventTitle, eventTargetEpoch, eventStartLocal\)/);
+  assert.match(serviceDelegate, /RiseCueWorkflow\.makeCalendarTarget\(response\)/);
+  assert.match(workflow, /response\.get\("eventTargetEpochSec"\)/);
+  assert.match(workflow, /eventTargetEpoch = response\.get\("eventStartEpochSec"\)/);
+  assert.match(workflow, /response\.get\("eventTargetDisplay"\)/);
+  assert.match(workflow, /response\.get\("eventTargetLocal"\)/);
+  assert.match(workflow, /RiseCueScheduler\.makeWakeTarget\(eventTitle, eventTargetEpoch, eventStartLocal\)/);
 });
