@@ -144,7 +144,7 @@ class RiseCueView extends WatchUi.View {
     }
 
     function drawBuildVersion(dc, centerX, top, size) {
-        if (!RiseCueConfig.shouldShowBuildVersion()) {
+        if (!RiseCueBuildConfig.shouldShowBuildVersion()) {
             return;
         }
 

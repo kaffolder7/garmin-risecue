@@ -36,9 +36,6 @@
         <setting propertyKey="@Properties.manualWorkflowTime" title="@Strings.SettingManualWorkflowTimeTitle">
             <settingConfig type="alphaNumeric" required="false" />
         </setting>
-        <setting propertyKey="@Properties.showBuildVersion" title="@Strings.SettingShowBuildVersionTitle">
-            <settingConfig type="boolean" />
-        </setting>
         <setting propertyKey="@Properties.sunriseEnabled" title="@Strings.SettingSunriseEnabledTitle">
             <settingConfig type="boolean" />
         </setting>

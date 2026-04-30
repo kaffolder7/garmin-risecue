@@ -10,7 +10,6 @@ module RiseCueConfig {
     const PROP_NOTIFICATION_BODY = "notificationBody";
     const PROP_TIME_ZONE = "timeZone";
     const PROP_MANUAL_WORKFLOW_TIME = "manualWorkflowTime";
-    const PROP_SHOW_BUILD_VERSION = "showBuildVersion";
     const PROP_SUNRISE_ENABLED = "sunriseEnabled";
     const PROP_SUNRISE_LATITUDE = "sunriseLatitude";
     const PROP_SUNRISE_LONGITUDE = "sunriseLongitude";
@@ -177,10 +176,6 @@ module RiseCueConfig {
 
     function getManualWorkflowTime() {
         return getString(PROP_MANUAL_WORKFLOW_TIME, "");
-    }
-
-    function shouldShowBuildVersion() {
-        return getBoolean(PROP_SHOW_BUILD_VERSION, false);
     }
 
     function isSunriseEnabled() {

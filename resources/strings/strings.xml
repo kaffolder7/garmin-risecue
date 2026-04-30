@@ -8,7 +8,6 @@
         <string id="SettingNotificationBodyTitle">Notification body</string>
         <string id="SettingTimeZoneTitle">Calendar time zone</string>
         <string id="SettingManualWorkflowTimeTitle">Manual workflow time</string>
-        <string id="SettingShowBuildVersionTitle">Show build version</string>
         <string id="SettingSunriseEnabledTitle">Enable sunrise alerts</string>
         <string id="SettingSunriseLatitudeTitle">Sunrise latitude</string>
         <string id="SettingSunriseLongitudeTitle">Sunrise longitude</string>

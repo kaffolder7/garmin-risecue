@@ -7,7 +7,6 @@
         <property id="notificationBody" type="string">Upcoming: {eventTitle} at {eventStartLocal}</property>
         <property id="timeZone" type="number">0</property>
         <property id="manualWorkflowTime" type="string"></property>
-        <property id="showBuildVersion" type="boolean">false</property>
         <property id="sunriseEnabled" type="boolean">false</property>
         <property id="sunriseLatitude" type="string"></property>
         <property id="sunriseLongitude" type="string"></property>
