@@ -2,6 +2,7 @@ using Toybox.Application.Storage;
 using Toybox.Background;
 using Toybox.Graphics;
 using Toybox.Time;
+using Toybox.Time.Gregorian;
 using Toybox.WatchUi;
 
 class RiseCueView extends WatchUi.View {
@@ -46,14 +47,24 @@ class RiseCueView extends WatchUi.View {
         var eventTitle = Storage.getValue(RiseCueConfig.STORAGE_LAST_EVENT_TITLE);
         var eventStart = Storage.getValue(RiseCueConfig.STORAGE_LAST_EVENT_START);
         var alertEpoch = Storage.getValue(RiseCueConfig.STORAGE_LAST_ALERT_EPOCH);
+        var previewTitle = Storage.getValue(RiseCueConfig.STORAGE_PREVIEW_EVENT_TITLE);
+        var previewStart = Storage.getValue(RiseCueConfig.STORAGE_PREVIEW_EVENT_START);
+        var previewAlertEpoch = Storage.getValue(RiseCueConfig.STORAGE_PREVIEW_ALERT_EPOCH);
         var sleepRegistered = Background.getSleepEventRegistered();
         var leadMinutes = RiseCueConfig.getLeadMinutes();
         var bufferMinutes = RiseCueConfig.getBufferMinutes();
 
         drawBrandHeader(dc, centerX, top, size);
 
-        var stateLabel = enabled ? (configured ? "ACTIVE" : "SETUP") : "PAUSED";
-        var stateColor = enabled ? (configured ? COLOR_GOOD : COLOR_WARN) : COLOR_DIM;
+        var workflow = getWorkflowStatus(manualConfigured, manualTime, manualDisplay, sleepRegistered);
+        var sunriseStatus = sunriseEnabled ? (sunriseConfigured ? "On" : "Setup") : "Off";
+        var leadStatus = getLeadStatus(leadMinutes, bufferMinutes);
+        var summarizedStatus = status == null ? null : summarizeStatus(status.toString());
+        var isChecking = summarizedStatus != null && summarizedStatus.equals("Checking calendar");
+        var hasQueuedAlert = alertEpoch != null && eventTitle != null;
+        var hasPreview = previewAlertEpoch != null && previewTitle != null;
+        var stateLabel = getStateLabel(enabled, configured, hasQueuedAlert, hasPreview, isChecking);
+        var stateColor = getStateColor(enabled, configured, hasQueuedAlert, hasPreview, isChecking);
         drawPill(
             dc,
             centerX - ((size * 30) / 200),
@@ -65,42 +76,32 @@ class RiseCueView extends WatchUi.View {
             stateLabel
         );
 
-        var workflow = getWorkflowStatus(manualConfigured, manualTime, manualDisplay, sleepRegistered);
-        var sunriseStatus = sunriseEnabled ? (sunriseConfigured ? "On" : "Setup") : "Off";
-        var leadStatus = getLeadStatus(leadMinutes, bufferMinutes);
-
-        var rowWidth = safeWidth(size, 80);
-        var rowStart = top + ((size * 37) / 100);
-        var rowGap = (size * 8) / 100;
-        drawRow(dc, "Endpoint", configured ? "Ready" : "Missing", rowStart, rowWidth, configured ? COLOR_GOOD : COLOR_WARN);
-        drawRow(dc, "Trigger", workflow, rowStart + rowGap, rowWidth, workflow.equals("Not set") || workflow.equals("Invalid time") ? COLOR_WARN : COLOR_TEXT);
-        drawRow(dc, "Sunrise", sunriseStatus, rowStart + (rowGap * 2), rowWidth, sunriseStatus.equals("Setup") ? COLOR_WARN : COLOR_TEXT);
-        drawRow(dc, "Lead", leadStatus, rowStart + (rowGap * 3), rowWidth, COLOR_TEXT);
-
-        if (eventTitle != null && eventStart != null) {
-            drawSectionLabel(dc, "NEXT TARGET", top + ((size * 72) / 100), safeWidth(size, 66));
-            drawCenteredWithin(dc, eventTitle.toString(), top + ((size * 78) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
-            drawCenteredWithin(dc, eventStart.toString(), top + ((size * 84) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_MUTED);
-        } else if (status != null) {
-            drawSectionLabel(dc, "STATUS", top + ((size * 72) / 100), safeWidth(size, 66));
-            drawCenteredWithin(dc, summarizeStatus(status.toString()), top + ((size * 79) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
+        if (hasQueuedAlert) {
+            drawSectionLabel(dc, "ALERT QUEUED", top + ((size * 36) / 100), safeWidth(size, 72));
+            drawCenteredWithin(dc, formatEpochTime(alertEpoch), top + ((size * 43) / 100), Graphics.FONT_SMALL, safeWidth(size, 76), COLOR_TEXT);
+            drawSectionLabel(dc, "TARGET", top + ((size * 60) / 100), safeWidth(size, 62));
+            drawCenteredWithin(dc, eventTitle.toString(), top + ((size * 66) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
+            drawCenteredWithin(dc, compactTargetDisplay(eventStart), top + ((size * 72) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_MUTED);
+            drawCenteredWithin(dc, getQueuedNote(manualConfigured), top + ((size * 82) / 100), Graphics.FONT_XTINY, safeWidth(size, 80), COLOR_MUTED);
+        } else if (hasPreview) {
+            drawSectionLabel(dc, "PREVIEW", top + ((size * 36) / 100), safeWidth(size, 72));
+            drawCenteredWithin(dc, "Would alert " + formatEpochTime(previewAlertEpoch), top + ((size * 43) / 100), Graphics.FONT_TINY, safeWidth(size, 84), COLOR_ACCENT);
+            drawSectionLabel(dc, "TARGET", top + ((size * 60) / 100), safeWidth(size, 62));
+            drawCenteredWithin(dc, previewTitle.toString(), top + ((size * 66) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
+            drawCenteredWithin(dc, compactTargetDisplay(previewStart), top + ((size * 72) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_MUTED);
+            drawCenteredWithin(dc, getPreviewQueueNote(manualConfigured, manualDisplay), top + ((size * 82) / 100), Graphics.FONT_XTINY, safeWidth(size, 80), COLOR_MUTED);
+        } else if (isChecking) {
+            drawSectionLabel(dc, "CHECKING", top + ((size * 38) / 100), safeWidth(size, 72));
+            drawCenteredWithin(dc, "Calendar", top + ((size * 48) / 100), Graphics.FONT_SMALL, safeWidth(size, 76), COLOR_TEXT);
+            drawCenteredWithin(dc, "Please wait", top + ((size * 64) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_MUTED);
         } else {
-            drawSectionLabel(dc, "STATUS", top + ((size * 72) / 100), safeWidth(size, 66));
-            drawCenteredWithin(dc, "Waiting for trigger", top + ((size * 79) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
+            drawSectionLabel(dc, "NO ALERT QUEUED", top + ((size * 38) / 100), safeWidth(size, 72));
+            drawCenteredWithin(dc, getEmptyStateMain(enabled, configured, summarizedStatus), top + ((size * 48) / 100), Graphics.FONT_TINY, safeWidth(size, 80), COLOR_TEXT);
+            drawCenteredWithin(dc, getNextCheckLine(workflow), top + ((size * 63) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_MUTED);
+            drawCenteredWithin(dc, "START checks now", top + ((size * 72) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_ACCENT);
         }
 
-        if (alertEpoch != null) {
-            drawPill(
-                dc,
-                centerX - ((size * 42) / 200),
-                top + ((size * 90) / 100),
-                (size * 42) / 100,
-                pillHeight(size),
-                COLOR_DIM,
-                COLOR_TEXT,
-                "ALERT QUEUED"
-            );
-        }
+        drawCenteredWithin(dc, getHealthLine(workflow, sunriseStatus, leadStatus), top + ((size * 89) / 100), Graphics.FONT_XTINY, safeWidth(size, 82), COLOR_DIM);
     }
 
     function drawFrame(dc, centerX, centerY, size) {
@@ -257,6 +258,117 @@ class RiseCueView extends WatchUi.View {
         }
 
         return leadMinutes + "m";
+    }
+
+    function getStateLabel(enabled, configured, hasQueuedAlert, hasPreview, isChecking) {
+        if (!enabled) {
+            return "PAUSED";
+        } else if (!configured) {
+            return "SETUP";
+        } else if (hasQueuedAlert) {
+            return "QUEUED";
+        } else if (hasPreview) {
+            return "PREVIEW";
+        } else if (isChecking) {
+            return "CHECKING";
+        }
+
+        return "READY";
+    }
+
+    function getStateColor(enabled, configured, hasQueuedAlert, hasPreview, isChecking) {
+        if (!enabled) {
+            return COLOR_DIM;
+        } else if (!configured) {
+            return COLOR_WARN;
+        } else if (hasQueuedAlert) {
+            return COLOR_GOOD;
+        } else if (hasPreview || isChecking) {
+            return COLOR_ACCENT;
+        }
+
+        return COLOR_DIM;
+    }
+
+    function getEmptyStateMain(enabled, configured, summarizedStatus) {
+        if (!enabled) {
+            return "Alerts paused";
+        } else if (!configured) {
+            return "Endpoint missing";
+        } else if (summarizedStatus != null
+            && (summarizedStatus.equals("Manual time needs HH:MM")
+                || summarizedStatus.equals("Manual trigger failed")
+                || summarizedStatus.equals("Sleep trigger failed"))) {
+            return summarizedStatus;
+        }
+
+        return "Ready to check";
+    }
+
+    function getNextCheckLine(workflow) {
+        if (workflow.equals("Invalid time")) {
+            return "Fix manual time";
+        } else if (workflow.equals("Not set")) {
+            return "Trigger not set";
+        }
+
+        return "Checks at " + workflow;
+    }
+
+    function getQueuedNote(manualConfigured) {
+        return manualConfigured ? "Manual check resumes after alert" : "Rechecks at Sleep Time";
+    }
+
+    function getPreviewQueueNote(manualConfigured, manualDisplay) {
+        if (manualConfigured && manualDisplay != null) {
+            return "Will queue at " + manualDisplay;
+        }
+
+        return "Will queue at Sleep Time";
+    }
+
+    function getHealthLine(workflow, sunriseStatus, leadStatus) {
+        return "Trigger " + workflow + " | Sunrise " + sunriseStatus + " | Lead " + leadStatus;
+    }
+
+    function formatEpochTime(epoch) {
+        if (epoch == null) {
+            return "";
+        }
+
+        try {
+            var info = Gregorian.info(new Time.Moment(epoch), Time.FORMAT_SHORT);
+            var hour = info.hour;
+            var minute = info.min;
+            var suffix = hour >= 12 ? "PM" : "AM";
+            var displayHour = hour % 12;
+            if (displayHour == 0) {
+                displayHour = 12;
+            }
+
+            return displayHour + ":" + minute.format("%02d") + " " + suffix;
+        } catch (ex) {
+            return "";
+        }
+    }
+
+    function compactTargetDisplay(value) {
+        if (value == null) {
+            return "";
+        }
+
+        var text = value.toString();
+        var sunrisePrefix = "Sunrise at ";
+        if (text.find(sunrisePrefix) == 0) {
+            return text.substring(sunrisePrefix.length(), null);
+        }
+
+        var atOffset = text.find(" at ");
+        if (atOffset != null) {
+            return text.substring(atOffset + 4, null);
+        }
+
+        return text;
     }
 
     function summarizeStatus(status) {
