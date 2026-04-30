@@ -260,17 +260,21 @@ test('privacy policy renders configured contact and Garmin disclosure', () => {
   const html = renderPrivacyPolicyHtml({
     appName: 'RiseCue',
     contactEmail: 'privacy@example.com',
-    effectiveDate: '2026-04-28'
+    effectiveDate: '2026-04-28',
+    publicEndpointOrigin: 'https://risecue.affolder.dev'
   });
 
   assert.match(html, /RiseCue Privacy Policy/);
   assert.match(html, /mailto:privacy%40example.com/);
-  assert.match(html, /public calendar endpoint operated for the app/);
+  assert.match(html, /public RiseCue service at/);
+  assert.match(html, /https:\/\/risecue\.affolder\.dev\/next-morning-event/);
   assert.match(html, /X-RiseCue-Calendar-Url/);
   assert.match(html, /private HTTPS Calendar ICS URL/);
   assert.match(html, /developer-managed endpoint token in the app package/);
-  assert.match(html, /public endpoint token helps reduce unauthenticated traffic/);
-  assert.match(html, /Data submitted to RiseCue or its endpoint is submitted to the app developer or endpoint operator, not to Garmin/);
+  assert.match(html, /The public endpoint uses HTTPS and a developer-managed token to reduce unauthenticated traffic/);
+  assert.match(html, /Data submitted to the RiseCue public endpoint is submitted to the app developer, not to Garmin/);
+  assert.doesNotMatch(html, /self-host/i);
+  assert.doesNotMatch(html, /endpoint operator/i);
 });
 
 test('endpoint token protects next-morning-event when configured', async () => {

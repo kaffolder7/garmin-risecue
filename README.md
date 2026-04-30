@@ -59,7 +59,7 @@ https://public-host.example.com/health
 https://public-host.example.com/privacy
 ```
 
-Set `PRIVACY_CONTACT_EMAIL` and optionally `PRIVACY_EFFECTIVE_DATE` before publishing so the policy has current contact details. The `/health` and `/privacy` pages are intentionally not protected by `ENDPOINT_TOKEN`.
+Set `PRIVACY_CONTACT_EMAIL`, `PRIVACY_PUBLIC_ENDPOINT_ORIGIN`, and optionally `PRIVACY_EFFECTIVE_DATE` before publishing so the policy has current contact details and the right public service URL. The `/health` and `/privacy` pages are intentionally not protected by `ENDPOINT_TOKEN`.
 
 Watch setting value example:
 
@@ -117,6 +117,7 @@ ENDPOINT_TOKEN=use-a-long-random-secret
 ALLOW_REQUEST_CALENDAR_URL=false
 PRIVACY_CONTACT_EMAIL=privacy@example.com
 PRIVACY_EFFECTIVE_DATE="April 28, 2026"
+PRIVACY_PUBLIC_ENDPOINT_ORIGIN=https://risecue.example.com
 PORT=8787
 HOST=0.0.0.0
 ```

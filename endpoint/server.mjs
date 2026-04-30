@@ -11,6 +11,8 @@ const DEFAULT_WINDOW_END = '12:00';
 const DEFAULT_TIME_ZONE = 'America/New_York';
 const DEFAULT_PRIVACY_EFFECTIVE_DATE = 'April 28, 2026';
 const DEFAULT_PRIVACY_APP_NAME = 'RiseCue';
+const DEFAULT_PUBLIC_ENDPOINT_ORIGIN = 'https://risecue.affolder.dev';
+const PUBLIC_CALENDAR_ENDPOINT_PATH = '/next-morning-event';
 export const REQUEST_CALENDAR_URL_HEADER = 'x-risecue-calendar-url';
 const REQUEST_CALENDAR_URL_HEADER_DISPLAY = 'X-RiseCue-Calendar-Url';
 
@@ -451,13 +453,23 @@ function renderContactHtml(appName, contactEmail) {
   return `Email: <a href="mailto:${encodeURIComponent(contactEmail)}">${safeEmail}</a>`;
 }
 
+function normalizePublicEndpointOrigin(value) {
+  const normalized = String(value || DEFAULT_PUBLIC_ENDPOINT_ORIGIN).replace(/\/+$/, '');
+  return normalized || DEFAULT_PUBLIC_ENDPOINT_ORIGIN;
+}
+
 export function renderPrivacyPolicyHtml({
   appName = process.env.PRIVACY_APP_NAME || DEFAULT_PRIVACY_APP_NAME,
   contactEmail = process.env.PRIVACY_CONTACT_EMAIL || '',
-  effectiveDate = process.env.PRIVACY_EFFECTIVE_DATE || DEFAULT_PRIVACY_EFFECTIVE_DATE
+  effectiveDate = process.env.PRIVACY_EFFECTIVE_DATE || DEFAULT_PRIVACY_EFFECTIVE_DATE,
+  publicEndpointOrigin = process.env.PRIVACY_PUBLIC_ENDPOINT_ORIGIN || DEFAULT_PUBLIC_ENDPOINT_ORIGIN
 } = {}) {
   const safeAppName = escapeHtml(appName);
   const safeEffectiveDate = escapeHtml(effectiveDate);
+  const publicOrigin = normalizePublicEndpointOrigin(publicEndpointOrigin);
+  const publicEndpointUrl = `${publicOrigin}${PUBLIC_CALENDAR_ENDPOINT_PATH}`;
+  const safePublicOrigin = escapeHtml(publicOrigin);
+  const safePublicEndpointUrl = escapeHtml(publicEndpointUrl);
   const contactHtml = renderContactHtml(safeAppName, contactEmail);
 
   return `<!doctype html>
@@ -515,37 +527,37 @@ export function renderPrivacyPolicyHtml({
     <h1>${safeAppName} Privacy Policy</h1>
     <p class="muted">Effective date: ${safeEffectiveDate}</p>
 
-    <p>${safeAppName} is a Garmin Connect IQ app that helps schedule a wake notification based on your next morning calendar event and, if enabled, sunrise. By default, ${safeAppName} can use a public calendar endpoint operated for the app; you may also configure a custom or self-hosted endpoint. This policy explains what data is processed by the app and by whichever calendar endpoint you use.</p>
+    <p>${safeAppName} is a Garmin Connect IQ app that helps schedule a wake notification based on your next morning calendar event and, if enabled, sunrise. This policy applies when the app uses the public RiseCue service at <a href="${safePublicOrigin}">${safePublicOrigin}</a>, including the calendar endpoint at <code>${safePublicEndpointUrl}</code>. If you change the app to use another endpoint, that service's privacy practices are separate from this policy.</p>
 
     <h2>Data processed by the watch app</h2>
-    <p>The app stores the settings you configure on your Garmin device or through Garmin Connect, such as the calendar endpoint URL, optional Calendar ICS URL, optional endpoint token for custom endpoints, time zone, morning window, notification text, lead and buffer minutes, snooze length, and alert preferences. Public builds may include a developer-managed endpoint token in the app package so the public endpoint can reject unauthenticated requests; this token is not a user setting. If you enable sunrise alerts, the app also stores the latitude and longitude you enter for sunrise calculation.</p>
+    <p>The app stores the settings you configure on your Garmin device or through Garmin Connect, such as the calendar endpoint URL, optional Calendar ICS URL, time zone, morning window, notification text, lead and buffer minutes, snooze length, and alert preferences. If you use the public endpoint, you do not need to enter a calendar endpoint token; public builds may include a developer-managed endpoint token in the app package so the public endpoint can reject unauthenticated requests. If you choose a different endpoint, any endpoint token you enter is stored as an app setting and sent only to that configured endpoint. If you enable sunrise alerts, the app also stores the latitude and longitude you enter for sunrise calculation.</p>
     <p>When a wake notification is scheduled, the app may temporarily store the selected event title and start time on the watch so it can show the notification later.</p>
 
     <h2>Data processed by the calendar endpoint</h2>
-    <p>When you use the public endpoint with your own calendar, the watch sends your private HTTPS Calendar ICS URL to the endpoint in the <code>X-RiseCue-Calendar-Url</code> request header. The endpoint fetches that ICS calendar feed and looks for the first timed event in the configured morning window. Calendar event titles, start times, end times, recurrence details, the private calendar feed URL, and the calendar feed response pass through the endpoint while the request is processed. The endpoint returns only the event status, event title, and event start time needed by the watch app.</p>
-    <p>Requests to the endpoint may also include technical metadata such as IP address, user agent, request path, query parameters for the morning window or time zone, the <code>X-RiseCue-Calendar-Url</code> header if configured, and an endpoint token. For public builds, the endpoint token may be a developer-managed token embedded in the app package. For custom endpoints, the endpoint token may be one you enter in app settings. The default, public endpoint may keep access logs containing some of that metadata.</p>
+    <p>When your watch is configured to use <code>${safePublicEndpointUrl}</code> with your own calendar, the watch sends your private HTTPS Calendar ICS URL to the public endpoint in the <code>X-RiseCue-Calendar-Url</code> request header. The public endpoint fetches that ICS calendar feed and looks for the first timed event in the configured morning window. Calendar event titles, start times, end times, recurrence details, the private calendar feed URL, and the calendar feed response pass through the public endpoint while the request is processed. The public endpoint returns only the event status, event title, and event start time needed by the watch app.</p>
+    <p>Requests to the public endpoint may also include technical metadata such as IP address, user agent, request path, query parameters for the morning window or time zone, the <code>X-RiseCue-Calendar-Url</code> header if configured, and the developer-managed endpoint token embedded in public app builds. The public endpoint may keep access logs containing some of that metadata.</p>
 
     <h2>How data is used</h2>
-    <p>Data is used to find the next morning calendar event, schedule or display a wake notification, troubleshoot the service, secure the endpoint, reduce unauthenticated endpoint traffic, and maintain the app. It is not used for advertising, profiling, or sale to third parties.</p>
+    <p>Data is used to find the next morning calendar event, schedule or display a wake notification, troubleshoot the service, secure the public endpoint, reduce unauthenticated endpoint traffic, and maintain the app. It is not used for advertising, profiling, or sale to third parties.</p>
 
     <h2>Retention</h2>
-    <p>The included endpoint code processes calendar data in memory and does not intentionally store calendar feed URLs, calendar contents, event titles, or event times after the request completes. Operational logs kept by a hosting provider, reverse proxy, or deployment platform may be retained according to that service's settings. On the watch, the last scheduled event title and time may remain in local app storage until replaced, cleared, or the app is removed.</p>
+    <p>The public endpoint processes calendar data in memory and does not intentionally store calendar feed URLs, calendar contents, event titles, or event times after the request completes. Operational logs kept by the hosting provider, reverse proxy, or deployment platform may be retained according to that service's settings. On the watch, the last scheduled event title and time may remain in local app storage until replaced, cleared, or the app is removed.</p>
 
     <h2>Sharing</h2>
-    <p>Calendar data may be processed by the server or hosting provider that runs the endpoint and by your calendar provider when the endpoint fetches the ICS feed. Data may also be disclosed if required by law or to protect the app, server, users, or others.</p>
-    <p>Data submitted to ${safeAppName} or its endpoint is submitted to the app developer or endpoint operator, not to Garmin. Garmin is not responsible for that data.</p>
+    <p>Calendar data may be processed by the hosting provider for <code>${safePublicOrigin}</code> and by your calendar provider when the public endpoint fetches the ICS feed. Data may also be disclosed if required by law or to protect the app, service, users, or others.</p>
+    <p>Data submitted to the ${safeAppName} public endpoint is submitted to the app developer, not to Garmin. Garmin is not responsible for that data.</p>
 
     <h2>Location data</h2>
-    <p>${safeAppName} does not collect location data by default. If you enable sunrise alerts, the latitude and longitude you enter are used on the watch for sunrise calculation and are not sent to the included calendar endpoint.</p>
+    <p>${safeAppName} does not collect location data by default. If you enable sunrise alerts, the latitude and longitude you enter are used on the watch for sunrise calculation and are not sent to the public endpoint.</p>
 
     <h2>Your choices</h2>
-    <p>You can stop public endpoint processing by disabling RiseCue alerts, removing or changing the calendar endpoint URL, removing the Calendar ICS URL when the public endpoint depends on it, configuring a custom endpoint, or uninstalling the app. The endpoint token setting applies to custom endpoints; public builds may use an embedded developer-managed token for the built-in endpoint. You can disable sunrise alerts or remove sunrise coordinates in app settings. You may use the contact method below to request deletion of user data under the developer's control. If you self-host the endpoint, you control its calendar feed configuration and any server logs created by your hosting setup.</p>
+    <p>You can stop sending calendar data to the public endpoint by disabling RiseCue alerts, removing the Calendar ICS URL, changing the calendar endpoint URL away from <code>${safePublicEndpointUrl}</code>, or uninstalling the app. You can disable sunrise alerts or remove sunrise coordinates in app settings. You may use the contact method below to request deletion of user data under the developer's control.</p>
 
     <h2>Security</h2>
-    <p>Use HTTPS for the endpoint, keep any custom endpoint token private, and protect the private calendar feed URL. The public endpoint token helps reduce unauthenticated traffic but should not be treated as a user-specific secret. No internet-connected service can be guaranteed completely secure.</p>
+    <p>Keep your private Calendar ICS URL private. The public endpoint uses HTTPS and a developer-managed token to reduce unauthenticated traffic, but the token is not user-specific. No internet-connected service can be guaranteed completely secure.</p>
 
     <h2>Changes</h2>
-    <p>This policy may be updated when the app or endpoint changes how data is collected, used, stored, or disclosed.</p>
+    <p>This policy may be updated when the app or public endpoint changes how data is collected, used, stored, or disclosed.</p>
 
     <h2>Contact</h2>
     <p>${contactHtml}</p>
