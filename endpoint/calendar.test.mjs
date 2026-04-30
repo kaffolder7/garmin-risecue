@@ -377,7 +377,7 @@ test('resolves request calendar URL only when opt-in is enabled', () => {
     }),
     {
       code: 'missing_calendar_url',
-      message: 'X-RiseCue-Calendar-Url header is required when CALENDAR_ICS_URL is not configured'
+      message: 'X-RiseCue-Calendar-Url header is required'
     }
   );
 });
@@ -457,7 +457,7 @@ test('endpoint requires request calendar header when dynamic URLs are enabled wi
     assert.equal(body.error, 'missing_calendar_url');
     assert.equal(
       body.message,
-      'X-RiseCue-Calendar-Url header is required when CALENDAR_ICS_URL is not configured'
+      'X-RiseCue-Calendar-Url header is required'
     );
     assert.equal(seenRequests.length, 0);
   });

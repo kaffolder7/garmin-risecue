@@ -149,7 +149,7 @@ export function resolveCalendarIcsUrl({ defaultIcsUrl, requestIcsUrl, allowReque
     if (!hasDefaultIcsUrl && requestCalendarUrlsAllowed) {
       throw new CalendarUrlError(
         'missing_calendar_url',
-        `${REQUEST_CALENDAR_URL_HEADER_DISPLAY} header is required when CALENDAR_ICS_URL is not configured`
+        `${REQUEST_CALENDAR_URL_HEADER_DISPLAY} header is required`
       );
     }
 
