@@ -236,7 +236,14 @@ First, build the app:
 npm run build:watch
 ```
 
-For simulator testing, start Garmin's simulator, then run the matching `.prg` for the device:
+For simulator testing, start Garmin's simulator first:
+
+```sh
+connectiq
+```
+
+Wait for the Connect IQ Simulator app to open, then run the matching `.prg` for
+the device in another terminal:
 
 ```sh
 monkeydo \
