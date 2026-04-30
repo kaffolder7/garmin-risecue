@@ -73,7 +73,7 @@ class RiseCueView extends WatchUi.View {
         var rowStart = top + ((size * 37) / 100);
         var rowGap = (size * 8) / 100;
         drawRow(dc, "Endpoint", configured ? "Ready" : "Missing", rowStart, rowWidth, configured ? COLOR_GOOD : COLOR_WARN);
-        drawRow(dc, "Workflow", workflow, rowStart + rowGap, rowWidth, workflow.equals("Not set") || workflow.equals("Invalid time") ? COLOR_WARN : COLOR_TEXT);
+        drawRow(dc, "Trigger", workflow, rowStart + rowGap, rowWidth, workflow.equals("Not set") || workflow.equals("Invalid time") ? COLOR_WARN : COLOR_TEXT);
         drawRow(dc, "Sunrise", sunriseStatus, rowStart + (rowGap * 2), rowWidth, sunriseStatus.equals("Setup") ? COLOR_WARN : COLOR_TEXT);
         drawRow(dc, "Lead", leadStatus, rowStart + (rowGap * 3), rowWidth, COLOR_TEXT);
 
