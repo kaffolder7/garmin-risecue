@@ -13,8 +13,11 @@ class RiseCueView extends WatchUi.View {
     const COLOR_WARN = Graphics.COLOR_ORANGE;
     const COLOR_ACCENT = Graphics.COLOR_BLUE;
 
+    var _launcherIcon;
+
     function initialize() {
         View.initialize();
+        _launcherIcon = WatchUi.loadResource($.Rez.Drawables.LauncherIcon);
     }
 
     function onUpdate(dc) {
@@ -47,15 +50,14 @@ class RiseCueView extends WatchUi.View {
         var leadMinutes = RiseCueConfig.getLeadMinutes();
         var bufferMinutes = RiseCueConfig.getBufferMinutes();
 
-        var titleFont = size < 280 ? Graphics.FONT_SMALL : Graphics.FONT_MEDIUM;
-        drawCenteredWithin(dc, "RiseCue", top + ((size * 10) / 100), titleFont, safeWidth(size, 70), COLOR_TEXT);
+        drawBrandHeader(dc, centerX, top, size);
 
         var stateLabel = enabled ? (configured ? "ACTIVE" : "SETUP") : "PAUSED";
         var stateColor = enabled ? (configured ? COLOR_GOOD : COLOR_WARN) : COLOR_DIM;
         drawPill(
             dc,
             centerX - ((size * 30) / 200),
-            top + ((size * 23) / 100),
+            top + ((size * 25) / 100),
             (size * 30) / 100,
             pillHeight(size),
             stateColor,
@@ -68,7 +70,7 @@ class RiseCueView extends WatchUi.View {
         var leadStatus = getLeadStatus(leadMinutes, bufferMinutes);
 
         var rowWidth = safeWidth(size, 80);
-        var rowStart = top + ((size * 35) / 100);
+        var rowStart = top + ((size * 37) / 100);
         var rowGap = (size * 8) / 100;
         drawRow(dc, "Endpoint", configured ? "Ready" : "Missing", rowStart, rowWidth, configured ? COLOR_GOOD : COLOR_WARN);
         drawRow(dc, "Workflow", workflow, rowStart + rowGap, rowWidth, workflow.equals("Not set") || workflow.equals("Invalid time") ? COLOR_WARN : COLOR_TEXT);
@@ -114,6 +116,26 @@ class RiseCueView extends WatchUi.View {
         dc.drawLine(centerX - tickWidth, topY, centerX + tickWidth, topY);
         dc.drawLine(centerX - tickWidth, bottomY, centerX + tickWidth, bottomY);
         dc.setPenWidth(1);
+    }
+
+    function drawBrandHeader(dc, centerX, top, size) {
+        var iconSize = iconDisplaySize(size);
+        var titleFont = size < 280 ? Graphics.FONT_XTINY : Graphics.FONT_TINY;
+
+        if (_launcherIcon != null) {
+            var sourceWidth = _launcherIcon.getWidth();
+            var sourceHeight = _launcherIcon.getHeight();
+            var iconX = centerX - (iconSize / 2);
+            var iconY = top + ((size * 6) / 100);
+
+            if (sourceWidth == iconSize && sourceHeight == iconSize) {
+                dc.drawBitmap(iconX, iconY, _launcherIcon);
+            } else {
+                dc.drawScaledBitmap(iconX, iconY, iconSize, iconSize, _launcherIcon);
+            }
+        }
+
+        drawCenteredWithin(dc, "RiseCue", top + ((size * 16) / 100), titleFont, safeWidth(size, 70), COLOR_TEXT);
     }
 
     function drawRow(dc, label, value, y, maxWidth, valueColor) {
@@ -204,6 +226,17 @@ class RiseCueView extends WatchUi.View {
     function pillHeight(size) {
         var height = (size * 6) / 100;
         return height < 18 ? 18 : height;
+    }
+
+    function iconDisplaySize(size) {
+        var iconSize = (size * 8) / 100;
+        if (iconSize < 20) {
+            return 20;
+        } else if (iconSize > 30) {
+            return 30;
+        }
+
+        return iconSize;
     }
 
     function getWorkflowStatus(manualConfigured, manualTime, manualDisplay, sleepRegistered) {
