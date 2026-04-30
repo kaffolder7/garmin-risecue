@@ -119,10 +119,69 @@ annotate_build_output() {
   done
 }
 
+cleanup_public_token_build() {
+  if [[ -n "${PUBLIC_BUILD_DIR:-}" ]]; then
+    rm -rf "$PUBLIC_BUILD_DIR"
+  fi
+}
+
+create_public_token_build_files() {
+  local PUBLIC_ENDPOINT_TOKEN="${RISECUE_PUBLIC_ENDPOINT_TOKEN:-${ENDPOINT_TOKEN:-}}"
+  local PUBLIC_SOURCE_DIR
+  local PUBLIC_SOURCE_FILE
+  local PUBLIC_JUNGLE_FILE
+
+  if [[ -z "$PUBLIC_ENDPOINT_TOKEN" ]]; then
+    echo "Public watch build requires RISECUE_PUBLIC_ENDPOINT_TOKEN or ENDPOINT_TOKEN." >&2
+    exit 1
+  fi
+
+  if ! command -v node >/dev/null 2>&1; then
+    echo "node is required to generate public watch build config." >&2
+    exit 1
+  fi
+
+  PUBLIC_BUILD_DIR="$(mktemp -d "$ROOT_DIR/bin/public-watch-build.XXXXXX")"
+  PUBLIC_SOURCE_DIR="$PUBLIC_BUILD_DIR/source"
+  PUBLIC_SOURCE_FILE="$PUBLIC_SOURCE_DIR/RiseCueBuildConfigPublic.mc"
+  PUBLIC_JUNGLE_FILE="$PUBLIC_BUILD_DIR/public-token.jungle"
+
+  mkdir -p "$PUBLIC_SOURCE_DIR"
+
+  PUBLIC_ENDPOINT_TOKEN="$PUBLIC_ENDPOINT_TOKEN" node - "$PUBLIC_SOURCE_FILE" <<'NODE'
+const fs = require('fs');
+
+const outputPath = process.argv[2];
+const token = process.env.PUBLIC_ENDPOINT_TOKEN || '';
+
+if (/[\x00-\x1f\x7f]/.test(token)) {
+  console.error('Public endpoint token must not contain control characters.');
+  process.exit(1);
+}
+
+const escapedToken = token.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+const source = `module RiseCueBuildConfig {
+    function getPublicEndpointToken() {
+        return "${escapedToken}";
+    }
+}
+`;
+
+fs.writeFileSync(outputPath, source, 'utf8');
+NODE
+
+  printf 'base.sourcePath = $(base.sourcePath);"%s"\n' "$PUBLIC_SOURCE_DIR" > "$PUBLIC_JUNGLE_FILE"
+  printf 'base.excludeAnnotations = defaultPublicEndpointToken\n' >> "$PUBLIC_JUNGLE_FILE"
+
+  JUNGLE_FILES="$ROOT_DIR/monkey.jungle;$PUBLIC_JUNGLE_FILE"
+}
+
 SDK_BIN="$(resolve_sdk_bin)"
 RESOLVED_JAVA_HOME="$(resolve_java_home)"
 JAVA_BIN="${RESOLVED_JAVA_HOME:+$RESOLVED_JAVA_HOME/bin/java}"
 KEY_PATH="${CONNECTIQ_DEVELOPER_KEY:-$ROOT_DIR/developer_key.der}"
+PUBLIC_BUILD_DIR=""
+JUNGLE_FILES="$ROOT_DIR/monkey.jungle"
 
 if [[ ! -x "$SDK_BIN/monkeyc" ]]; then
   print_sdk_failure "$SDK_BIN"
@@ -149,6 +208,11 @@ fi
 
 mkdir -p "$ROOT_DIR/bin"
 
+if [[ "${RISECUE_EMBED_PUBLIC_ENDPOINT_TOKEN:-}" == "1" ]]; then
+  trap cleanup_public_token_build EXIT
+  create_public_token_build_files
+fi
+
 JAVA_HOME="$RESOLVED_JAVA_HOME"
 export JAVA_HOME
 export PATH="$JAVA_HOME/bin:$PATH"
@@ -164,7 +228,7 @@ fi
 
 for DEVICE in "${DEVICES[@]}"; do
   "$SDK_BIN/monkeyc" \
-    -f "$ROOT_DIR/monkey.jungle" \
+    -f "$JUNGLE_FILES" \
     -d "$DEVICE" \
     -o "$ROOT_DIR/bin/RiseCue-$DEVICE.prg" \
     -y "$KEY_PATH" \

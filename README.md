@@ -171,6 +171,18 @@ Build a single target:
 npm run build:watch -- epix2pro47mm
 ```
 
+Build a simulator/sideload target that embeds the token for the built-in public
+RiseCue endpoint:
+
+```sh
+npm run build:watch:public -- epix2pro47mm
+```
+
+`build:watch:public` loads ignored local `.env` values, reads
+`RISECUE_PUBLIC_ENDPOINT_TOKEN` first, and falls back to `ENDPOINT_TOKEN`.
+The output path is still `bin/RiseCue-epix2pro47mm.prg`, so the usual
+`monkeydo bin/RiseCue-epix2pro47mm.prg epix2pro47mm` flow works.
+
 The script uses Homebrew OpenJDK 21 at `/opt/homebrew/opt/openjdk@21` and creates an ignored local `developer_key.der` if one is not already present. Override with `CONNECTIQ_SDK_BIN`, `JAVA_HOME`, or `CONNECTIQ_DEVELOPER_KEY` as needed.
 
 The developer key is not requested from Garmin. It is a local signing key used by `monkeyc -y`. For long-term use, keep it somewhere backed up and private, then point builds at it:

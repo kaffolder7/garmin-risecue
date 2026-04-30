@@ -6,6 +6,7 @@
   "description": "Garmin Connect IQ wake-alert app plus a small ICS-to-JSON calendar endpoint.",
   "scripts": {
     "build:watch": "scripts/build-watch.sh",
+    "build:watch:public": "node --env-file-if-exists=.env scripts/build-watch-public.mjs",
     "package:watch": "scripts/package-watch.sh",
     "package:watch:public": "node --env-file-if-exists=.env scripts/package-watch-public.mjs",
     "start": "node --env-file=.env endpoint/server.mjs",

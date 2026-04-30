@@ -580,6 +580,8 @@ test('watch token selection uses compiled token only for the default public endp
   const buildConfig = await readFile(new URL('../source/RiseCueBuildConfig.mc', import.meta.url), 'utf8');
   const settings = await readFile(new URL('../resources/settings/settings.xml', import.meta.url), 'utf8');
   const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+  const buildWatch = await readFile(new URL('../scripts/build-watch.sh', import.meta.url), 'utf8');
+  const buildWatchPublic = await readFile(new URL('../scripts/build-watch-public.mjs', import.meta.url), 'utf8');
   const packageWatch = await readFile(new URL('../scripts/package-watch.sh', import.meta.url), 'utf8');
   const packageWatchPublic = await readFile(new URL('../scripts/package-watch-public.mjs', import.meta.url), 'utf8');
 
@@ -599,9 +601,17 @@ test('watch token selection uses compiled token only for the default public endp
   assert.equal(settings.includes('defaultPublicEndpointToken'), false);
 
   assert.equal(
+    packageJson.scripts['build:watch:public'],
+    'node --env-file-if-exists=.env scripts/build-watch-public.mjs'
+  );
+  assert.equal(
     packageJson.scripts['package:watch:public'],
     'node --env-file-if-exists=.env scripts/package-watch-public.mjs'
   );
+  assert.match(buildWatchPublic, /RISECUE_EMBED_PUBLIC_ENDPOINT_TOKEN: '1'/);
+  assert.match(buildWatch, /RISECUE_PUBLIC_ENDPOINT_TOKEN:-\$\{ENDPOINT_TOKEN:-\}/);
+  assert.match(buildWatch, /RiseCueBuildConfigPublic\.mc/);
+  assert.match(buildWatch, /base\.excludeAnnotations = defaultPublicEndpointToken/);
   assert.match(packageWatchPublic, /RISECUE_EMBED_PUBLIC_ENDPOINT_TOKEN: '1'/);
   assert.match(packageWatch, /RISECUE_PUBLIC_ENDPOINT_TOKEN:-\$\{ENDPOINT_TOKEN:-\}/);
   assert.match(packageWatch, /RiseCueBuildConfigPublic\.mc/);
