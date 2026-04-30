@@ -660,3 +660,68 @@ test('watch response handling prefers calendar target fields with start fallback
   assert.match(workflow, /response\.get\("eventTargetLocal"\)/);
   assert.match(workflow, /RiseCueScheduler\.makeWakeTarget\(eventTitle, eventTargetEpoch, eventStartLocal\)/);
 });
+
+test('watch START opens an action menu with conditional alert clearing', async () => {
+  const delegate = await readFile(new URL('../source/RiseCueDelegate.mc', import.meta.url), 'utf8');
+  const scheduler = await readFile(new URL('../source/RiseCueScheduler.mc', import.meta.url), 'utf8');
+  const view = await readFile(new URL('../source/RiseCueView.mc', import.meta.url), 'utf8');
+  const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
+
+  assert.match(view, /RiseCueScheduler\.hasQueuedAlert\(\)/);
+  assert.match(view, /getStartOptionsLine\(isChecking\)/);
+  assert.match(view, /START for options/);
+
+  assert.match(delegate, /module RiseCueActionMenu/);
+  assert.match(delegate, /ACTION_START_SYNC = "startSync"/);
+  assert.match(delegate, /ACTION_CLEAR_ALERTS = "clearAlerts"/);
+  assert.match(delegate, /function onSelect\(\)[\s\S]*new WatchUi\.ActionMenu\(null\)/);
+  assert.match(delegate, /new WatchUi\.ActionMenuItem\(\{ :label => "Start sync" \}, RiseCueActionMenu\.ACTION_START_SYNC\)/);
+  assert.match(
+    delegate,
+    /if \(RiseCueScheduler\.hasQueuedAlert\(\)\) \{[\s\S]*new WatchUi\.ActionMenuItem\(\{ :label => "Clear alert\(s\)" \}, RiseCueActionMenu\.ACTION_CLEAR_ALERTS\)/
+  );
+  assert.match(delegate, /WatchUi\.showActionMenu\(menu, new RiseCueActionMenuDelegate\(self\)\)/);
+  assert.match(delegate, /class RiseCueActionMenuDelegate extends WatchUi\.ActionMenuDelegate/);
+  assert.match(delegate, /function onSelect\(item as WatchUi\.ActionMenuItem\) as Void/);
+  assert.match(delegate, /item\.getId\(\)/);
+  assert.match(delegate, /itemId == RiseCueActionMenu\.ACTION_START_SYNC[\s\S]*_delegate\.startSync\(\)/);
+  assert.match(
+    delegate,
+    /itemId == RiseCueActionMenu\.ACTION_CLEAR_ALERTS[\s\S]*RiseCueScheduler\.clearQueuedAlertAndResumeWorkflow\(\)[\s\S]*Wake alert cleared/
+  );
+
+  assert.match(delegate, /var _refreshingQueuedAlert/);
+  assert.match(delegate, /function startSync\(\)/);
+  assert.match(delegate, /_refreshingQueuedAlert = RiseCueScheduler\.hasQueuedAlert\(\);/);
+  assert.match(delegate, /var refreshingQueuedAlert = _refreshingQueuedAlert;/);
+  assert.match(delegate, /_refreshingQueuedAlert = false;/);
+  assert.match(delegate, /refreshingQueuedAlert && notifyWhenNoTarget[\s\S]*showStatusNotification/);
+  assert.match(
+    delegate,
+    /refreshingQueuedAlert && !notifyWhenNoTarget[\s\S]*RiseCueScheduler\.clearQueuedAlertAndResumeWorkflow\(\)/
+  );
+
+  assert.match(
+    scheduler,
+    /function hasQueuedAlert\(\)[\s\S]*STORAGE_LAST_EVENT_TITLE[\s\S]*STORAGE_LAST_ALERT_EPOCH/
+  );
+  assert.match(
+    scheduler,
+    /function clearQueuedAlertAndResumeWorkflow\(\)[\s\S]*deletePendingAlert\(\);[\s\S]*return registerWorkflowTriggers\(\);/
+  );
+  assert.match(
+    scheduler,
+    /function registerManualWorkflowEvent\(manualParts\)[\s\S]*TEMPORAL_PURPOSE_ALERT[\s\S]*Wake alert remains scheduled/
+  );
+
+  assert.match(delegate, /finishManualRefresh\(null, "No morning events found", false\)/);
+  assert.match(delegate, /finishManualRefresh\(null, "Calendar endpoint is not configured", true\)/);
+  assert.match(delegate, /finishManualRefresh\(null, "Calendar request failed", true\)/);
+  assert.match(delegate, /finishManualRefresh\(null, "Calendar request returned " \+ responseCode, true\)/);
+  assert.match(delegate, /finishManualRefresh\(null, "Calendar response missing event time", true\)/);
+
+  assert.match(readme, /Press START on the watch face to open the action menu/);
+  assert.match(readme, /Start sync/);
+  assert.match(readme, /Clear alert\(s\)/);
+  assert.match(readme, /request or replacement-scheduling failures keep the existing queued alert/);
+});

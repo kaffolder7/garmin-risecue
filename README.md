@@ -399,6 +399,7 @@ Manual workflow time notes:
 - Leave the field blank to keep the default Sleep Time behavior.
 - Enter a valid `HH:MM` 24-hour time to run the calendar/sunrise check at that watch-local time every day. When set, RiseCue unregisters the Sleep Time trigger so the workflow does not also run at bedtime.
 - Connect IQ supports only one temporal background event at a time. RiseCue uses that slot for the manual workflow trigger until the workflow schedules a wake alert; the alert then owns the slot until it fires, after which RiseCue schedules the next manual workflow trigger.
+- Press START on the watch face to open the action menu. Choose `Start sync` to re-check the calendar/sunrise target. When an alert is queued, the menu also shows `Clear alert(s)`; choosing it clears the queued alert and resumes the Sleep Time or manual workflow trigger without contacting the endpoint. During `Start sync`, a new valid target replaces the queued alert, a successful no-target check clears it, and request or replacement-scheduling failures keep the existing queued alert.
 - Invalid values, such as `25:00` or `9pm`, are ignored and RiseCue falls back to the Sleep Time trigger.
 
 Tone and vibration notes:

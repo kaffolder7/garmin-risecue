@@ -46,8 +46,7 @@ module RiseCueScheduler {
         }
 
         clearManualWorkflowEvent();
-        registerSleepEvent();
-        return true;
+        return registerSleepEvent();
     }
 
     function registerSleepEvent() {
@@ -56,8 +55,10 @@ module RiseCueScheduler {
                 Background.registerForSleepEvent();
             }
             storeStatus("Sleep Time trigger registered");
+            return true;
         } catch (ex) {
             storeStatus("Could not register Sleep Time trigger");
+            return false;
         }
     }
 
@@ -385,6 +386,21 @@ module RiseCueScheduler {
             Storage.deleteValue(RiseCueConfig.STORAGE_LAST_ALERT_EPOCH);
         } catch (ex) {
         }
+    }
+
+    function hasQueuedAlert() {
+        try {
+            var eventTitle = Storage.getValue(RiseCueConfig.STORAGE_LAST_EVENT_TITLE);
+            var alertEpoch = Storage.getValue(RiseCueConfig.STORAGE_LAST_ALERT_EPOCH);
+            return eventTitle != null && alertEpoch != null;
+        } catch (ex) {
+            return false;
+        }
+    }
+
+    function clearQueuedAlertAndResumeWorkflow() {
+        deletePendingAlert();
+        return registerWorkflowTriggers();
     }
 
     function createSunriseTargetResult() {

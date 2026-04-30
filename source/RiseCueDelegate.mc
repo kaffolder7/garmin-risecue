@@ -3,17 +3,36 @@ using Toybox.Lang;
 using Toybox.PersistedContent;
 using Toybox.WatchUi;
 
+module RiseCueActionMenu {
+    const ACTION_START_SYNC = "startSync";
+    const ACTION_CLEAR_ALERTS = "clearAlerts";
+}
+
 class RiseCueDelegate extends WatchUi.BehaviorDelegate {
     var _sunriseTarget;
     var _sunriseStatus;
+    var _refreshingQueuedAlert;
 
     function initialize() {
         BehaviorDelegate.initialize();
         _sunriseTarget = null;
         _sunriseStatus = null;
+        _refreshingQueuedAlert = false;
     }
 
     function onSelect() {
+        var menu = new WatchUi.ActionMenu(null);
+        menu.addItem(new WatchUi.ActionMenuItem({ :label => "Start sync" }, RiseCueActionMenu.ACTION_START_SYNC));
+        if (RiseCueScheduler.hasQueuedAlert()) {
+            menu.addItem(new WatchUi.ActionMenuItem({ :label => "Clear alert(s)" }, RiseCueActionMenu.ACTION_CLEAR_ALERTS));
+        }
+
+        WatchUi.showActionMenu(menu, new RiseCueActionMenuDelegate(self));
+        return true;
+    }
+
+    function startSync() {
+        _refreshingQueuedAlert = RiseCueScheduler.hasQueuedAlert();
         RiseCueScheduler.clearPreviewState();
         RiseCueScheduler.registerWorkflowTriggers();
 
@@ -76,11 +95,27 @@ class RiseCueDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function finishManualRefresh(calendarTarget, noTargetStatus, notifyWhenNoTarget) {
+        var refreshingQueuedAlert = _refreshingQueuedAlert;
+        _refreshingQueuedAlert = false;
+        var status = RiseCueWorkflow.mergeStatus(noTargetStatus, _sunriseStatus);
         var target = RiseCueScheduler.chooseEarlierWakeTarget(calendarTarget, _sunriseTarget);
-        if (target == null) {
-            var status = RiseCueWorkflow.mergeStatus(noTargetStatus, _sunriseStatus);
+        if (refreshingQueuedAlert && notifyWhenNoTarget) {
             RiseCueScheduler.clearPreviewState();
             RiseCueScheduler.storeStatus(status);
+            RiseCueScheduler.showStatusNotification("RiseCue", status + ".");
+            WatchUi.requestUpdate();
+            return;
+        }
+
+        if (target == null) {
+            RiseCueScheduler.clearPreviewState();
+            if (refreshingQueuedAlert && !notifyWhenNoTarget) {
+                if (RiseCueScheduler.clearQueuedAlertAndResumeWorkflow()) {
+                    RiseCueScheduler.storeStatus(status);
+                }
+            } else {
+                RiseCueScheduler.storeStatus(status);
+            }
             if (notifyWhenNoTarget) {
                 RiseCueScheduler.showStatusNotification("RiseCue", status + ".");
             }
@@ -97,5 +132,26 @@ class RiseCueDelegate extends WatchUi.BehaviorDelegate {
         }
 
         WatchUi.requestUpdate();
+    }
+}
+
+class RiseCueActionMenuDelegate extends WatchUi.ActionMenuDelegate {
+    var _delegate;
+
+    function initialize(delegate) {
+        ActionMenuDelegate.initialize();
+        _delegate = delegate;
+    }
+
+    function onSelect(item as WatchUi.ActionMenuItem) as Void {
+        var itemId = item.getId();
+        if (itemId == RiseCueActionMenu.ACTION_START_SYNC) {
+            _delegate.startSync();
+        } else if (itemId == RiseCueActionMenu.ACTION_CLEAR_ALERTS) {
+            if (RiseCueScheduler.clearQueuedAlertAndResumeWorkflow()) {
+                RiseCueScheduler.storeStatus("Wake alert cleared");
+            }
+            WatchUi.requestUpdate();
+        }
     }
 }

@@ -61,7 +61,7 @@ class RiseCueView extends WatchUi.View {
         var leadStatus = getLeadStatus(leadMinutes, bufferMinutes);
         var summarizedStatus = status == null ? null : summarizeStatus(status.toString());
         var isChecking = summarizedStatus != null && summarizedStatus.equals("Checking calendar");
-        var hasQueuedAlert = alertEpoch != null && eventTitle != null;
+        var hasQueuedAlert = RiseCueScheduler.hasQueuedAlert() && alertEpoch != null && eventTitle != null;
         var hasPreview = previewAlertEpoch != null && previewTitle != null;
         var stateLabel = getStateLabel(enabled, configured, hasQueuedAlert, hasPreview, isChecking);
         var stateColor = getStateColor(enabled, configured, hasQueuedAlert, hasPreview, isChecking);
@@ -82,7 +82,7 @@ class RiseCueView extends WatchUi.View {
             drawSectionLabel(dc, "TARGET", top + ((size * 60) / 100), safeWidth(size, 62));
             drawCenteredWithin(dc, eventTitle.toString(), top + ((size * 66) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_TEXT);
             drawCenteredWithin(dc, compactTargetDisplay(eventStart), top + ((size * 72) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_MUTED);
-            drawCenteredWithin(dc, getQueuedNote(manualConfigured), top + ((size * 82) / 100), Graphics.FONT_XTINY, safeWidth(size, 66), COLOR_MUTED);
+            drawCenteredWithin(dc, getStartOptionsLine(isChecking), top + ((size * 82) / 100), Graphics.FONT_XTINY, safeWidth(size, 66), COLOR_ACCENT);
         } else if (hasPreview) {
             drawSectionLabel(dc, "PREVIEW", top + ((size * 36) / 100), safeWidth(size, 72));
             drawCenteredWithin(dc, "Would alert " + formatEpochTime(previewAlertEpoch), top + ((size * 43) / 100), Graphics.FONT_TINY, safeWidth(size, 84), COLOR_ACCENT);
@@ -98,7 +98,7 @@ class RiseCueView extends WatchUi.View {
             drawSectionLabel(dc, "NO ALERT QUEUED", top + ((size * 38) / 100), safeWidth(size, 72));
             drawCenteredWithin(dc, getEmptyStateMain(enabled, configured, summarizedStatus), top + ((size * 48) / 100), Graphics.FONT_TINY, safeWidth(size, 80), COLOR_TEXT);
             drawCenteredWithin(dc, getNextCheckLine(workflow), top + ((size * 63) / 100), Graphics.FONT_XTINY, safeWidth(size, 76), COLOR_MUTED);
-            drawCenteredWithin(dc, "START checks now", top + ((size * 72) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_ACCENT);
+            drawCenteredWithin(dc, "START for options", top + ((size * 72) / 100), Graphics.FONT_XTINY, safeWidth(size, 70), COLOR_ACCENT);
         }
 
         if (!hasQueuedAlert && !hasPreview) {
@@ -317,8 +317,8 @@ class RiseCueView extends WatchUi.View {
         return "Checks at " + workflow;
     }
 
-    function getQueuedNote(manualConfigured) {
-        return manualConfigured ? "Manual check resumes after alert" : "Rechecks at Sleep Time";
+    function getStartOptionsLine(isChecking) {
+        return isChecking ? "Checking calendar" : "START for options";
     }
 
     function getPreviewQueueNote(manualConfigured, manualDisplay) {
