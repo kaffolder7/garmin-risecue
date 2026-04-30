@@ -493,7 +493,7 @@ test('watch token selection uses compiled token only for the default public endp
   const packageWatch = await readFile(new URL('../scripts/package-watch.sh', import.meta.url), 'utf8');
   const packageWatchPublic = await readFile(new URL('../scripts/package-watch-public.mjs', import.meta.url), 'utf8');
 
-  assert.match(config, /DEFAULT_ENDPOINT_URL = "https:\/\/garmin-risecue\.affolder\.cloud\/next-morning-event"/);
+  assert.match(config, /DEFAULT_ENDPOINT_URL = "https:\/\/risecue\.affolder\.dev\/next-morning-event"/);
   assert.match(buildConfig, /module RiseCueBuildConfig/);
   assert.match(buildConfig, /\(:defaultPublicEndpointToken\)/);
   assert.match(buildConfig, /function getPublicEndpointToken\(\)/);
