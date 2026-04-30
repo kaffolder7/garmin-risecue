@@ -12,6 +12,7 @@ const DEFAULT_TIME_ZONE = 'America/New_York';
 const DEFAULT_PRIVACY_EFFECTIVE_DATE = 'April 28, 2026';
 const DEFAULT_PRIVACY_APP_NAME = 'RiseCue';
 export const REQUEST_CALENDAR_URL_HEADER = 'x-risecue-calendar-url';
+const REQUEST_CALENDAR_URL_HEADER_DISPLAY = 'X-RiseCue-Calendar-Url';
 
 class CalendarUrlError extends Error {
   constructor(code, message) {
@@ -141,11 +142,21 @@ function headerValue(headers, name) {
 }
 
 export function resolveCalendarIcsUrl({ defaultIcsUrl, requestIcsUrl, allowRequestCalendarUrl }) {
+  const hasDefaultIcsUrl = typeof defaultIcsUrl === 'string' && defaultIcsUrl.trim() !== '';
+  const requestCalendarUrlsAllowed = parseBooleanFlag(allowRequestCalendarUrl);
+
   if (typeof requestIcsUrl !== 'string' || requestIcsUrl.trim() === '') {
+    if (!hasDefaultIcsUrl && requestCalendarUrlsAllowed) {
+      throw new CalendarUrlError(
+        'missing_calendar_url',
+        `${REQUEST_CALENDAR_URL_HEADER_DISPLAY} header is required when CALENDAR_ICS_URL is not configured`
+      );
+    }
+
     return defaultIcsUrl;
   }
 
-  if (!parseBooleanFlag(allowRequestCalendarUrl)) {
+  if (!requestCalendarUrlsAllowed) {
     return defaultIcsUrl;
   }
 

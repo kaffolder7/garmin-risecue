@@ -368,6 +368,18 @@ test('resolves request calendar URL only when opt-in is enabled', () => {
     }),
     'https://request.example/calendar.ics'
   );
+
+  assert.throws(
+    () => resolveCalendarIcsUrl({
+      defaultIcsUrl: '',
+      requestIcsUrl: '',
+      allowRequestCalendarUrl: true
+    }),
+    {
+      code: 'missing_calendar_url',
+      message: 'X-RiseCue-Calendar-Url header is required when CALENDAR_ICS_URL is not configured'
+    }
+  );
 });
 
 async function withTestServer(options, callback) {
@@ -430,6 +442,24 @@ test('endpoint uses request calendar header when dynamic URLs are enabled', asyn
 
     assert.equal(response.status, 200);
     assert.equal(seenRequests[0].icsUrl, 'https://request.example/calendar.ics');
+  });
+});
+
+test('endpoint requires request calendar header when dynamic URLs are enabled without fallback', async () => {
+  await withTestServer({
+    icsUrl: '',
+    allowRequestCalendarUrl: true
+  }, async ({ port, seenRequests }) => {
+    const response = await fetch(`http://127.0.0.1:${port}/next-morning-event`);
+    const body = await response.json();
+
+    assert.equal(response.status, 400);
+    assert.equal(body.error, 'missing_calendar_url');
+    assert.equal(
+      body.message,
+      'X-RiseCue-Calendar-Url header is required when CALENDAR_ICS_URL is not configured'
+    );
+    assert.equal(seenRequests.length, 0);
   });
 });
 
