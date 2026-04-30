@@ -677,10 +677,10 @@ test('watch START opens an action menu with conditional alert clearing', async (
   assert.match(delegate, /var _actionMenuDelegate/);
   assert.match(delegate, /_actionMenuDelegate = null;/);
   assert.match(delegate, /function onSelect\(\)[\s\S]*new WatchUi\.ActionMenu\(null\)/);
-  assert.match(delegate, /new WatchUi\.ActionMenuItem\(\{ :label => "Start sync" \}, RiseCueActionMenu\.ACTION_START_SYNC\)/);
+  assert.match(delegate, /new WatchUi\.ActionMenuItem\(\{ :label => "Check" \}, RiseCueActionMenu\.ACTION_START_SYNC\)/);
   assert.match(
     delegate,
-    /if \(RiseCueScheduler\.hasQueuedAlert\(\)\) \{[\s\S]*new WatchUi\.ActionMenuItem\(\{ :label => "Clear alert\(s\)" \}, RiseCueActionMenu\.ACTION_CLEAR_ALERTS\)/
+    /if \(RiseCueScheduler\.hasQueuedAlert\(\)\) \{[\s\S]*new WatchUi\.ActionMenuItem\(\{ :label => "Clear" \}, RiseCueActionMenu\.ACTION_CLEAR_ALERTS\)/
   );
   assert.match(delegate, /_actionMenuDelegate = new RiseCueActionMenuDelegate\(self\);/);
   assert.match(delegate, /WatchUi\.showActionMenu\(menu, _actionMenuDelegate\)/);
@@ -727,7 +727,7 @@ test('watch START opens an action menu with conditional alert clearing', async (
   assert.match(delegate, /finishManualRefresh\(null, "Calendar response missing event time", true\)/);
 
   assert.match(readme, /Press START on the watch face to open the action menu/);
-  assert.match(readme, /Start sync/);
-  assert.match(readme, /Clear alert\(s\)/);
+  assert.match(readme, /Check/);
+  assert.match(readme, /Clear/);
   assert.match(readme, /request or replacement-scheduling failures keep the existing queued alert/);
 });

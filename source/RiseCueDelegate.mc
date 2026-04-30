@@ -24,9 +24,9 @@ class RiseCueDelegate extends WatchUi.BehaviorDelegate {
 
     function onSelect() {
         var menu = new WatchUi.ActionMenu(null);
-        menu.addItem(new WatchUi.ActionMenuItem({ :label => "Start sync" }, RiseCueActionMenu.ACTION_START_SYNC));
+        menu.addItem(new WatchUi.ActionMenuItem({ :label => "Check" }, RiseCueActionMenu.ACTION_START_SYNC));
         if (RiseCueScheduler.hasQueuedAlert()) {
-            menu.addItem(new WatchUi.ActionMenuItem({ :label => "Clear alert(s)" }, RiseCueActionMenu.ACTION_CLEAR_ALERTS));
+            menu.addItem(new WatchUi.ActionMenuItem({ :label => "Clear" }, RiseCueActionMenu.ACTION_CLEAR_ALERTS));
         }
 
         _actionMenuDelegate = new RiseCueActionMenuDelegate(self);
