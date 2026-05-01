@@ -49,6 +49,11 @@
         <string id="ToneStyleAlertLow">Alert low</string>
         <string id="ToneStyleTimeAlert">Time alert</string>
         <string id="ToneStyleCanary">Canary</string>
+        <string id="ToneStyleAllArounder">All-Arounder</string>
+        <string id="ToneStyleGentleChime">Gentle Chime</string>
+        <string id="ToneStyleWakeUp">Wake Up</string>
+        <string id="ToneStyleTwoTone">Two-Tone</string>
+        <string id="ToneStyleSoftBedside">Soft Bedside</string>
         <string id="ToneStyleCustom">Custom pattern</string>
         <string id="VibrationStyleDoublePulse">Double pulse</string>
         <string id="VibrationStyleLongBuzz">Long buzz</string>

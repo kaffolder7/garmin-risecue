@@ -388,7 +388,7 @@ Configure these in Garmin Connect / Connect IQ:
 - Morning window start/end, default `04:00` through `12:00`
 - Snooze minutes, default `10`, configurable from `6` to `60`
 - Alert mode: vibrate, tone and vibrate, tone only, or notification only
-- Tone style: alarm, loud beep, alert high, alert low, time alert, canary, or custom pattern
+- Tone style: alarm, loud beep, alert high, alert low, time alert, canary, all-arounder, gentle chime, wake up, two-tone, soft bedside, or custom pattern
 - Custom tone pattern, using `frequency:duration,frequency:duration`
 - Tone repeat count, default `1`, used for custom tone patterns
 - Vibration style: double pulse, long buzz, progressive ramp, urgent pulse, or custom pattern
@@ -413,6 +413,7 @@ Manual workflow time notes:
 Tone and vibration notes:
 
 - Connect IQ does not support embedded `.wav` or `.mp3` notification samples for this watch app. Tone styles use Garmin's built-in tone constants or generated beep sequences.
+- Preview `.wav` files for the generated predefined tone styles are available in `previews/tones/` for local reference.
 - Custom tone values are clamped to `100-10000` Hz and `50-2000` ms, with at most 8 steps.
 - Custom vibration values are clamped to strength `0-100` and `50-3000` ms, with at most 8 steps.
 - A vibration strength of `0` creates a pause between pulses.

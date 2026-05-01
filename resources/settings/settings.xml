@@ -76,6 +76,11 @@
                 <listEntry value="3">@Strings.ToneStyleAlertLow</listEntry>
                 <listEntry value="4">@Strings.ToneStyleTimeAlert</listEntry>
                 <listEntry value="5">@Strings.ToneStyleCanary</listEntry>
+                <listEntry value="7">@Strings.ToneStyleAllArounder</listEntry>
+                <listEntry value="8">@Strings.ToneStyleGentleChime</listEntry>
+                <listEntry value="9">@Strings.ToneStyleWakeUp</listEntry>
+                <listEntry value="10">@Strings.ToneStyleTwoTone</listEntry>
+                <listEntry value="11">@Strings.ToneStyleSoftBedside</listEntry>
                 <listEntry value="6">@Strings.ToneStyleCustom</listEntry>
             </settingConfig>
         </setting>

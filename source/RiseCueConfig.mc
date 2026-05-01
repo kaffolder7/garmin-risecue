@@ -37,6 +37,11 @@ module RiseCueConfig {
     const TONE_STYLE_TIME_ALERT = 4;
     const TONE_STYLE_CANARY = 5;
     const TONE_STYLE_CUSTOM = 6;
+    const TONE_STYLE_ALL_AROUNDER = 7;
+    const TONE_STYLE_GENTLE_CHIME = 8;
+    const TONE_STYLE_WAKE_UP = 9;
+    const TONE_STYLE_TWO_TONE = 10;
+    const TONE_STYLE_SOFT_BEDSIDE = 11;
 
     const VIBRATION_STYLE_DOUBLE_PULSE = 0;
     const VIBRATION_STYLE_LONG_BUZZ = 1;

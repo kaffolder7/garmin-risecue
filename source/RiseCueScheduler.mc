@@ -650,6 +650,21 @@ module RiseCueScheduler {
                 }
 
                 storeStatus("Invalid custom tone pattern");
+            } else {
+                var predefinedPairs = getPredefinedTonePairs(style);
+
+                if (predefinedPairs != null) {
+                    if (Attention has :ToneProfile) {
+                        Attention.playTone({
+                            :toneProfile => getToneProfiles(predefinedPairs),
+                            :repeatCount => 1
+                        });
+                        return;
+                    }
+
+                    Attention.playTone(Attention.TONE_ALARM);
+                    return;
+                }
             }
 
             Attention.playTone(getPredefinedTone(style));
@@ -672,6 +687,51 @@ module RiseCueScheduler {
         }
 
         return Attention.TONE_ALARM;
+    }
+
+    function getPredefinedTonePairs(style) {
+        if (style == RiseCueConfig.TONE_STYLE_ALL_AROUNDER) {
+            return [
+                [880, 180],
+                [1175, 180],
+                [1319, 220],
+                [1175, 180],
+                [1568, 450]
+            ];
+        } else if (style == RiseCueConfig.TONE_STYLE_GENTLE_CHIME) {
+            return [
+                [784, 220],
+                [988, 220],
+                [1175, 260],
+                [1568, 500]
+            ];
+        } else if (style == RiseCueConfig.TONE_STYLE_WAKE_UP) {
+            return [
+                [988, 140],
+                [1319, 140],
+                [1760, 180],
+                [1319, 140],
+                [988, 140],
+                [1976, 450]
+            ];
+        } else if (style == RiseCueConfig.TONE_STYLE_TWO_TONE) {
+            return [
+                [1000, 220],
+                [1500, 220],
+                [1000, 220],
+                [1500, 220],
+                [1800, 500]
+            ];
+        } else if (style == RiseCueConfig.TONE_STYLE_SOFT_BEDSIDE) {
+            return [
+                [740, 250],
+                [932, 250],
+                [1175, 300],
+                [1480, 550]
+            ];
+        }
+
+        return null;
     }
 
     function getToneProfiles(pairs) {
