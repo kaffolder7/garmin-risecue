@@ -13,7 +13,7 @@
     "test": "node --test endpoint/*.test.mjs"
   },
   "dependencies": {
-    "node-ical": "^0.26.0"
+    "node-ical": "^0.26.1"
   },
   "engines": {
     "node": ">=20"
